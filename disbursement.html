@@ -231,31 +231,76 @@
       },6000);
     }
 
-    function downloadReceipt(){
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const name = document.getElementById("fullname").value;
-      const bank = document.getElementById("bank").value;
-      const account = document.getElementById("account").value;
+function downloadReceipt(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
 
-      doc.setFont("helvetica","bold");
+  const name = document.getElementById("fullname").value;
+  const bank = document.getElementById("bank").value;
+  const account = document.getElementById("account").value;
+
+  // ====== Add Watermark (flag.jpg) ======
+  const imgFlag = new Image();
+  imgFlag.src = "flag.jpg"; // make sure this is accessible (same folder or full URL)
+  imgFlag.onload = function() {
+    doc.addImage(imgFlag, "JPEG", 30, 40, 150, 150, "", "FAST"); 
+    // semi-transparent effect
+    doc.setGState(new doc.GState({opacity:0.1}));
+    
+    // ====== Reset opacity for normal text ======
+    doc.setGState(new doc.GState({opacity:1}));
+
+    // ====== Add Logo (images2.png) ======
+    const imgLogo = new Image();
+    imgLogo.src = "images2.png";
+    imgLogo.onload = function() {
+      doc.addImage(imgLogo, "PNG", 20, 10, 20, 20); // top-left small logo
+
+      // ====== Header ======
       doc.setFontSize(18);
-      doc.text("Grant Disbursement Receipt",20,20);
+      doc.setFont("helvetica", "bold");
+      doc.text("Grant Disbursement Receipt", 105, 20, { align: "center" });
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "italic");
+      doc.text("Official Receipt Document", 105, 28, { align: "center" });
 
+      // ====== Divider Line ======
+      doc.setDrawColor(0);
+      doc.line(20, 35, 190, 35);
+
+      // ====== Invoice Details ======
       doc.setFontSize(12);
-      doc.setFont("helvetica","normal");
-      doc.text("Invoice ID: INV-2025-001",20,40);
-      doc.text("Payer: " + name,20,50);
-      doc.text("Bank: " + bank,20,60);
-      doc.text("Account: " + account,20,70);
-      doc.text("Approved Grant: $200,000",20,90);
-      doc.text("Application Fee: $300 (Paid)",20,110);
-      doc.text("Activation Fee: $1500 (Paid)",20,120);
-      doc.setFont("helvetica","italic");
-      doc.text("Thank you for your application.",20,150);
+      doc.setFont("helvetica", "normal");
+      doc.text("Invoice ID: INV-2025-001", 20, 45);
+      doc.text("Date: " + new Date().toLocaleDateString(), 150, 45);
 
+      // ====== Payer Info Section ======
+      doc.setFont("helvetica", "bold");
+      doc.text("Payer Information", 20, 60);
+      doc.setFont("helvetica", "normal");
+      doc.text("Name: " + name, 20, 70);
+      doc.text("Bank: " + bank, 20, 80);
+      doc.text("Account: " + account, 20, 90);
+
+      // ====== Payment Info Section ======
+      doc.setFont("helvetica", "bold");
+      doc.text("Payment Summary", 20, 110);
+      doc.setFont("helvetica", "normal");
+      doc.text("Approved Grant: $200,000", 20, 120);
+      doc.text("Application Fee: $300 (Paid)", 20, 130);
+      doc.text("Activation Fee: $1500 (Not Paid)", 20, 140);
+
+      // ====== Footer ======
+      doc.setFont("helvetica", "italic");
+      doc.text("Thank you for your application.", 105, 180, { align: "center" });
+      doc.setFontSize(9);
+      doc.text("This is a system generated receipt - no signature required.", 105, 190, { align: "center" });
+
+      // ====== Save PDF ======
       doc.save("Grant_Receipt.pdf");
     }
+  }
+}
 
     function goDashboard(){
       window.location.href = "approval-user1.html";
