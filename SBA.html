@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Texas floods | U.S. Small Business Administration</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #1b1b1b;
+    }
+
+    /* Header */
+    .gov-bar {
+      background: #f5f5f5;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    .gov-bar span {
+      color: #333;
+    }
+    .gov-bar a {
+      color: #005ea2;
+      text-decoration: none;
+      margin-left: 6px;
+      font-size: 13px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid #ddd;
+    }
+    .header img {
+      height: 40px;
+    }
+    .header button {
+      background: #005ea2;
+      border: none;
+      padding: 8px 16px;
+      color: #fff;
+      font-weight: bold;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    .menu-icon {
+      width: 26px;
+      height: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .menu-icon span {
+      display: block;
+      height: 3px;
+      background: #333;
+      border-radius: 2px;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      font-size: 14px;
+      padding: 12px 16px;
+    }
+    .breadcrumb a {
+      color: #005ea2;
+      text-decoration: none;
+    }
+    .breadcrumb span {
+      color: #333;
+    }
+
+    /* Main */
+    .main {
+      display: flex;
+      padding: 16px;
+    }
+    .sidebar {
+      width: 220px;
+      border-right: 1px solid #ddd;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar li {
+      padding: 10px 12px;
+      border-left: 4px solid transparent;
+      cursor: pointer;
+    }
+    .sidebar li.active {
+      border-left: 4px solid #005ea2;
+      font-weight: bold;
+    }
+    .content {
+      flex: 1;
+      padding: 0 20px;
+    }
+    .content h1 {
+      font-size: 32px;
+      margin: 0 0 12px;
+    }
+    .content p {
+      font-size: 16px;
+      color: #444;
+    }
+
+    /* Floating help button */
+    .help-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #005ea2;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Government bar -->
+  <div class="gov-bar">
+    <span>🇺🇸 An official website of the United States government</span> 
+    <a href="#">Here’s how you know</a>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <img src="images2.png" alt="SBA Logo">
+    <div style="display: flex; gap: 12px; align-items:center;">
+      <button>Español</button>
+      <div class="menu-icon">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumb">
+    <a href="#">Home</a> › 
+    <a href="#">Funding Programs</a> › 
+    <a href="#">Disaster assistance</a> › 
+    <span>Texas floods</span>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <ul>
+        <li>Loans</li>
+        <li>Investment capital</li>
+        <li class="active">Disaster assistance</li>
+      </ul>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <h1>Texas floods</h1>
+      <p>SBA disaster assistance for homeowners, renters, and businesses affected by Texas floods.</p>
+    </div>
+  </div>
+
+  <!-- Floating button -->
+  <div class="help-btn">Help improve this site</div>
+
+</body>
+</html>
