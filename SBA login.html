@@ -3,16 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Texas floods | U.S. Small Business Administration</title>
+  <title>Grant Disbursement | SBA</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="images2.png">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="images2.png">
+
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #fff;
-      color: #1b1b1b;
+      background: #f9f9f9;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      color: #222;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* --- Watermark on whole page --- */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("images2.png") center center no-repeat;
+      background-size: 300px;
+      opacity: 0.05;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Watermark on containers and modals */
+    .form-container, form, .modal-content, .login-box {
+      position: relative;
+      background: rgba(255,255,255,0.95);
+      border-radius: 8px;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .form-container::before,
+    form::before,
+    .modal-content::before,
+    .login-box::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("flag.jpg") center center no-repeat;
+      background-size: 220px;
+      opacity: 0.08;
+      z-index: -1;
     }
 
     /* Header */
@@ -293,4 +334,4 @@
     }
   </script>
 </body>
-</html>
+      </html>
