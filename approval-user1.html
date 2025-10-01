@@ -3,16 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grant Approval | U.S. Small Business Administration</title>
+  <title>Grant Disbursement | SBA</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="images2.png">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="images2.png">
+
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f9f9f9;
-      color: #1b1b1b;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      color: #222;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* --- Watermark on whole page --- */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("images2.png") center center no-repeat;
+      background-size: 300px;
+      opacity: 0.05;  /* faint watermark */
+      z-index: -1;
+      pointer-events: none;
+      transition: opacity 0.5s ease-in-out;
+    }
+    body.processing-active::before {
+      opacity: 0.25; /* stronger during processing */
+    }
+
+    /* Watermark on containers */
+    .form-container, form, .approval-box {
+      position: relative;
+      background: rgba(255,255,255,0.95);
+      border-radius: 8px;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .form-container::before,
+    form::before,
+    .approval-box::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("flag.jpg") center center no-repeat;
+      background-size: 220px;
+      opacity: 0.08;
+      z-index: -1;
     }
 
     /* Header */
@@ -22,15 +66,8 @@
       padding: 6px 12px;
       border-bottom: 1px solid #ddd;
     }
-    .gov-bar span {
-      color: #333;
-    }
-    .gov-bar a {
-      color: #005ea2;
-      text-decoration: none;
-      margin-left: 6px;
-      font-size: 13px;
-    }
+    .gov-bar span { color: #333; }
+    .gov-bar a { color: #005ea2; text-decoration: none; margin-left: 6px; }
 
     .header {
       display: flex;
@@ -39,14 +76,8 @@
       padding: 16px;
       border-bottom: 1px solid #ddd;
     }
-    .header img {
-      height: 40px;
-    }
-    .header h1 {
-      font-size: 20px;
-      color: #005ea2;
-      margin: 0;
-    }
+    .header img { height: 40px; }
+    .header h1 { font-size: 20px; color: #005ea2; margin: 0; }
 
     /* Main content */
     .main {
@@ -70,6 +101,12 @@
 
     .approval-box h2 {
       color: #005ea2;
+      margin-bottom: 10px;
+    }
+
+    .welcome-msg {
+      font-size: 15px;
+      color: #333;
       margin-bottom: 20px;
     }
 
@@ -85,7 +122,7 @@
       color: #333;
     }
 
-    /* Approved amount button */
+    /* Approved amount */
     .approved-btn {
       display: inline-block;
       padding: 15px 30px;
@@ -95,11 +132,9 @@
       color: white;
       border: none;
       border-radius: 12px;
-      box-shadow: 5px 5px 15px rgba(0,0,0,0.2), 
-                  -5px -5px 15px rgba(255,255,255,0.4);
-      cursor: default;
       margin: 20px 0;
-      transform: perspective(500px) translateZ(20px);
+      box-shadow: 5px 5px 15px rgba(0,0,0,0.2),
+                  -5px -5px 15px rgba(255,255,255,0.4);
     }
 
     /* Disbursement button */
@@ -115,9 +150,7 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       transition: background 0.3s;
     }
-    .disburse-btn:hover {
-      background: #004080;
-    }
+    .disburse-btn:hover { background: #004080; }
 
     /* Processing animation */
     .processing {
@@ -136,10 +169,7 @@
       animation: spin 1s linear infinite;
       margin-bottom: 15px;
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
     /* Footer */
     footer {
@@ -153,17 +183,15 @@
 
     /* Responsive */
     @media (max-width: 768px) {
-      .details strong {
-        width: 100%;
-      }
+      .details strong { width: 100%; }
     }
   </style>
 </head>
-<body>
+<body class="processing-active">
 
-  <!-- Government bar -->
+  <!-- Gov bar -->
   <div class="gov-bar">
-    <span>🇺🇸 An official website of the United States government</span> 
+    <span>🇺🇸 An official website of the United States government</span>
     <a href="#">Here’s how you know</a>
   </div>
 
@@ -184,8 +212,8 @@
 
     <!-- Approval Content -->
     <div class="approval-box" id="approvalBox">
-      <h2>🎉 Congratulations, Johnathan Smith!</h2>
-      <p>Your grant application has been successfully approved.</p>
+      <h2>🎉 Congratulations!</h2>
+      <p class="welcome-msg" id="welcomeMsg"></p>
 
       <div class="details">
         <p><strong>Full Legal Name:</strong> Johnathan Smith</p>
@@ -200,14 +228,13 @@
       </div>
 
       <!-- Approved Amount -->
+      <button class="approved-btn">$200,000 Approved</button>
+
+      <!-- Disbursement -->
       <div>
-        <button class="approved-btn">$200,000 Approved</button>
+        <a href="disbursement.html" class="disburse-btn">Add Bank Account for Disbursement</a>
       </div>
-
-      <!-- Add Bank Account -->
-      <a href="disbursement.html" class="disburse-btn">Add Bank Account for Disbursement</a>
     </div>
-
   </div>
 
   <!-- Footer -->
@@ -216,11 +243,25 @@
   </footer>
 
   <script>
-    // Show processing for 6s, then approval
+    // Greeting logic
+    function getGreeting() {
+      const now = new Date();
+      const hour = now.getHours();
+      let greeting = "Good evening";
+      if (hour < 12) greeting = "Good morning";
+      else if (hour < 18) greeting = "Good afternoon";
+
+      const applicantName = "Johnathan Smith"; // Replace dynamically if needed
+      return `${greeting}, welcome back ${applicantName}.`;
+    }
+
+    // Show processing for 6s then approval
     setTimeout(() => {
+      document.body.classList.remove("processing-active");
       document.getElementById("processingBox").style.display = "none";
       document.getElementById("approvalBox").style.display = "block";
+      document.getElementById("welcomeMsg").textContent = getGreeting();
     }, 6000);
   </script>
 </body>
-</html>
+  </html>
