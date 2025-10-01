@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Texas floods | U.S. Small Business Administration</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #1b1b1b;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .gov-bar {
+      background: #f5f5f5;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    .gov-bar span {
+      color: #333;
+    }
+    .gov-bar a {
+      color: #005ea2;
+      text-decoration: none;
+      margin-left: 6px;
+      font-size: 13px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid #ddd;
+    }
+    .header img {
+      height: 40px;
+    }
+    .header button {
+      background: #005ea2;
+      border: none;
+      padding: 8px 16px;
+      color: #fff;
+      font-weight: bold;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    .menu-icon {
+      width: 26px;
+      height: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .menu-icon span {
+      display: block;
+      height: 3px;
+      background: #333;
+      border-radius: 2px;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      font-size: 14px;
+      padding: 12px 16px;
+    }
+    .breadcrumb a {
+      color: #005ea2;
+      text-decoration: none;
+    }
+    .breadcrumb span {
+      color: #333;
+    }
+
+    /* Main */
+    .main {
+      display: flex;
+      flex: 1;
+      padding: 16px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .sidebar {
+      width: 220px;
+      border-right: 1px solid #ddd;
+      flex-shrink: 0;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar li {
+      padding: 10px 12px;
+      border-left: 4px solid transparent;
+      cursor: pointer;
+    }
+    .sidebar li.active {
+      border-left: 4px solid #005ea2;
+      font-weight: bold;
+    }
+    .content {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Login form */
+    .login-box {
+      background: #f9f9f9;
+      padding: 30px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      width: 100%;
+      max-width: 320px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+    .login-box h2 {
+      margin: 0 0 20px;
+      font-size: 22px;
+      text-align: center;
+    }
+    .login-box input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .login-box button {
+      width: 100%;
+      padding: 10px;
+      background: #005ea2;
+      border: none;
+      color: #fff;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .error {
+      color: red;
+      font-size: 14px;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    /* Processing animation */
+    .processing {
+      display: none;
+      text-align: center;
+      font-size: 16px;
+      color: #005ea2;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #005ea2;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Footer */
+    footer {
+      background: #f5f5f5;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      font-size: 14px;
+      padding: 15px;
+      color: #444;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .main {
+        flex-direction: column;
+        align-items: center;
+      }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+      }
+      .content {
+        padding-top: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Government bar -->
+  <div class="gov-bar">
+    <span>🇺🇸 An official website of the United States government</span> 
+    <a href="#">Here’s how you know</a>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <img src="images2.png" alt="SBA Logo">
+    <div style="display: flex; gap: 12px; align-items:center;">
+      <button>Español</button>
+      <div class="menu-icon">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumb">
+    <a href="#">Home</a> › 
+    <a href="#">Funding Programs</a> › 
+    <a href="#">Disaster assistance</a> › 
+    <span>Texas floods</span>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <ul>
+        <li>Grant</li>
+        <li>Investment capital</li>
+        <li class="active">Disaster assistance</li>
+      </ul>
+    </div>
+
+    <!-- Content with login -->
+    <div class="content">
+      <div class="login-box" id="loginBox">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <div class="error" id="error"></div>
+      </div>
+
+      <div class="processing" id="processingBox">
+        <div class="spinner"></div>
+        <p>Processing your login... Please wait</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    © 2025 U.S. Small Business Administration | All Rights Reserved
+  </footer>
+
+
+  <script>
+    const users = [
+      {username: "user1", password: "pass1", redirect: "approval-user1.html"},
+      {username: "user2", password: "pass2", redirect: "approval-user2.html"},
+      {username: "admin", password: "admin123", redirect: "approval-admin.html"},
+      {username: "guest", password: "guest123", redirect: "approval-guest.html"}
+    ];
+
+    function login() {
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+      const errorDiv = document.getElementById("error");
+
+      const match = users.find(u => u.username === user && u.password === pass);
+
+      if (match) {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("processingBox").style.display = "block";
+
+        setTimeout(() => {
+          window.location.href = match.redirect;
+        }, 6000); // 6 seconds delay
+      } else {
+        errorDiv.textContent = "Invalid username or password!";
+      }
+    }
+  </script>
+</body>
+</html>
