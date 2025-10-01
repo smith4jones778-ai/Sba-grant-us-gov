@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grant Disbursement | SBA</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      color: #222;
+    }
+
+    /* Header */
+    .gov-bar {
+      background: #f5f5f5;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    .gov-bar a { color: #005ea2; text-decoration: none; margin-left: 6px; }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid #ddd;
+    }
+    .header img { height: 40px; }
+    .header h1 { font-size: 20px; color: #005ea2; margin: 0; }
+
+    /* Form */
+    .form-box {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    form {
+      background: #fff;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+    form h2 {
+      color: #005ea2;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin: 12px 0 4px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    button.btn {
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      border: none;
+      background: #005ea2;
+      color: #fff;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button.btn:hover { background: #004080; }
+
+    /* Processing animation */
+    .processing {
+      display: none;
+      flex: 1;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    .spinner {
+      border: 6px solid #eee;
+      border-top: 6px solid #005ea2;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+
+    /* Modals */
+    .modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    .modal-content h2 { color: #005ea2; margin-bottom: 15px; }
+    .modal-content p { font-size: 15px; margin: 8px 0; }
+    .modal-content strong { color: #111; }
+
+    .fees { text-align: left; margin: 15px 0; font-size: 15px; }
+    .fees p { display: flex; justify-content: space-between; margin: 8px 0; }
+    .paid { color: green; font-weight: bold; }
+    .pending { color: red; font-weight: bold; }
+
+    /* Footer */
+    footer {
+      background: #f5f5f5;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      font-size: 14px;
+      padding: 15px;
+      color: #444;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Government bar -->
+  <div class="gov-bar">
+    🇺🇸 An official website of the United States government
+    <a href="#">Here’s how you know</a>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <img src="images2.png" alt="SBA Logo">
+    <h1>Grant Disbursement</h1>
+  </div>
+
+  <!-- Form -->
+  <div class="form-box" id="formBox">
+    <form id="bankForm">
+      <h2>Enter Bank Details</h2>
+      <label for="fullname">Full Name</label>
+      <input type="text" id="fullname" required>
+      <label for="bank">Bank Name</label>
+      <input type="text" id="bank" required>
+      <label for="account">Account Number</label>
+      <input type="text" id="account" required>
+      <label for="routing">Routing Number</label>
+      <input type="text" id="routing" required>
+      <button type="submit" class="btn">Submit for Disbursement</button>
+    </form>
+  </div>
+
+  <!-- Processing -->
+  <div class="processing" id="processingBox">
+    <div class="spinner"></div>
+    <p id="processingText">Verifying your details... Please wait</p>
+  </div>
+
+  <!-- Modal 1: Congrats -->
+  <div class="modal" id="modal1">
+    <div class="modal-content">
+      <h2>🎉 Congratulations, <span id="m1Name"></span>!</h2>
+      <p>Your grant has been approved and is ready for disbursement.</p>
+      <p><strong>Bank Account Holder:</strong> <span id="m1Name2"></span></p>
+      <p><strong>Bank Name:</strong> <span id="m1Bank"></span></p>
+      <p><strong>Account Number:</strong> <span id="m1Account"></span></p>
+      <p><strong>Routing Number:</strong> <span id="m1Routing"></span></p>
+      <p><strong>Approved Grant Amount:</strong> 
+        <span style="font-size:18px; font-weight:bold; color:#005ea2;">$200,000</span></p>
+      <button class="btn" onclick="showProcessing2()">Proceed</button>
+    </div>
+  </div>
+
+  <!-- Modal 2: Fees -->
+  <div class="modal" id="modal2">
+    <div class="modal-content">
+      <h2>⚠️ Important Notice</h2>
+      <p>Before your grant disbursement, kindly review the one-time processing fees below:</p>
+      <div class="fees">
+        <p>Application Fee: <span class="paid">$300 ✅</span></p>
+        <p>Activation Fee: <span class="pending">$1500 ❌ Pending</span></p>
+      </div>
+      <p style="font-weight:bold; color:#c00;">Kindly settle all pending processing fees to receive your disbursement today.</p>
+      <button class="btn" onclick="showProcessing3()">Pay Now</button>
+    </div>
+  </div>
+
+  <!-- Modal 3: Fake Receipt -->
+  <div class="modal" id="modal3">
+    <div class="modal-content">
+      <h2>✅ Pay Now!</h2>
+      <p>Invoice ID: INV-2025-001</p>
+      <p>Payer: <span id="rName"></span></p>
+      <p>Bank: <span id="rBank"></span></p>
+      <p>Account: <span id="rAccount"></span></p>
+      <p><strong>Amount:</strong> $1,500 Activation Fee</p>
+      <p style="color:green; font-weight:bold;">When Payment is Confirmed</p>
+      <p>Your grant will be disbursed within 24 hours.</p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    © 2025 U.S. Small Business Administration | All Rights Reserved
+  </footer>
+
+  <script>
+    const form = document.getElementById("bankForm");
+    form.addEventListener("submit", function(e){
+      e.preventDefault();
+      document.getElementById("formBox").style.display = "none";
+      document.getElementById("processingBox").style.display = "flex";
+
+      // Fill user info into modals
+      const name = document.getElementById("fullname").value;
+      const bank = document.getElementById("bank").value;
+      const account = document.getElementById("account").value;
+      const routing = document.getElementById("routing").value;
+
+      document.getElementById("m1Name").innerText = name;
+      document.getElementById("m1Name2").innerText = name;
+      document.getElementById("m1Bank").innerText = bank;
+      document.getElementById("m1Account").innerText = account;
+      document.getElementById("m1Routing").innerText = routing;
+
+      document.getElementById("rName").innerText = name;
+      document.getElementById("rBank").innerText = bank;
+      document.getElementById("rAccount").innerText = account;
+
+      // After 6s show modal 1
+      setTimeout(()=>{
+        document.getElementById("processingBox").style.display = "none";
+        document.getElementById("modal1").style.display = "flex";
+      },6000);
+    });
+
+    function showProcessing2(){
+      document.getElementById("modal1").style.display = "none";
+      document.getElementById("processingBox").style.display = "flex";
+      document.getElementById("processingText").innerText = "Preparing disbursement instructions...";
+      setTimeout(()=>{
+        document.getElementById("processingBox").style.display = "none";
+        document.getElementById("modal2").style.display = "flex";
+      },6000);
+    }
+
+    function showProcessing3(){
+      document.getElementById("modal2").style.display = "none";
+      document.getElementById("processingBox").style.display = "flex";
+      document.getElementById("processingText").innerText = "Confirming your payment...";
+      setTimeout(()=>{
+        document.getElementById("processingBox").style.display = "none";
+        document.getElementById("modal3").style.display = "flex";
+      },6000);
+    }
+  </script>
+</body>
+</html>

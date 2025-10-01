@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grant Approval | U.S. Small Business Administration</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      color: #1b1b1b;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .gov-bar {
+      background: #f5f5f5;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    .gov-bar span {
+      color: #333;
+    }
+    .gov-bar a {
+      color: #005ea2;
+      text-decoration: none;
+      margin-left: 6px;
+      font-size: 13px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid #ddd;
+    }
+    .header img {
+      height: 40px;
+    }
+    .header h1 {
+      font-size: 20px;
+      color: #005ea2;
+      margin: 0;
+    }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .approval-box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+      width: 100%;
+      max-width: 700px;
+      text-align: center;
+      display: none; /* Hidden until processing finishes */
+    }
+
+    .approval-box h2 {
+      color: #005ea2;
+      margin-bottom: 20px;
+    }
+
+    .details {
+      text-align: left;
+      margin: 20px 0;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .details strong {
+      display: inline-block;
+      width: 260px;
+      color: #333;
+    }
+
+    /* Approved amount button */
+    .approved-btn {
+      display: inline-block;
+      padding: 15px 30px;
+      font-size: 20px;
+      font-weight: bold;
+      background: linear-gradient(145deg, #00c851, #007e33);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 5px 5px 15px rgba(0,0,0,0.2), 
+                  -5px -5px 15px rgba(255,255,255,0.4);
+      cursor: default;
+      margin: 20px 0;
+      transform: perspective(500px) translateZ(20px);
+    }
+
+    /* Disbursement button */
+    .disburse-btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #005ea2;
+      color: #fff;
+      font-size: 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: background 0.3s;
+    }
+    .disburse-btn:hover {
+      background: #004080;
+    }
+
+    /* Processing animation */
+    .processing {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    .spinner {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #005ea2;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Footer */
+    footer {
+      background: #f5f5f5;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      font-size: 14px;
+      padding: 15px;
+      color: #444;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .details strong {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Government bar -->
+  <div class="gov-bar">
+    <span>🇺🇸 An official website of the United States government</span> 
+    <a href="#">Here’s how you know</a>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <img src="images2.png" alt="SBA Logo">
+    <h1>Grant Approval Notice</h1>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Processing Animation -->
+    <div class="processing" id="processingBox">
+      <div class="spinner"></div>
+      <p>Finalizing your approval... Please wait</p>
+    </div>
+
+    <!-- Approval Content -->
+    <div class="approval-box" id="approvalBox">
+      <h2>🎉 Congratulations, Johnathan Smith!</h2>
+      <p>Your grant application has been successfully approved.</p>
+
+      <div class="details">
+        <p><strong>Full Legal Name:</strong> Johnathan Smith</p>
+        <p><strong>Date of Birth:</strong> March 12, 1980</p>
+        <p><strong>Email Address:</strong> johnsmith@example.com</p>
+        <p><strong>Phone Number:</strong> (202) 555-0199</p>
+        <p><strong>Mailing Address:</strong> 1201 Elm Street, Dallas, TX 75270</p>
+        <p><strong>Social Security Number (SSN):</strong> ***-**-6789</p>
+        <p><strong>Unique Entity Identifier (UEI):</strong> JSM12345USA</p>
+        <p><strong>Organization/Business Name:</strong> Smith Innovations LLC</p>
+        <p><strong>Title/Role:</strong> Executive Director</p>
+      </div>
+
+      <!-- Approved Amount -->
+      <div>
+        <button class="approved-btn">$200,000 Approved</button>
+      </div>
+
+      <!-- Add Bank Account -->
+      <a href="disbursement.html" class="disburse-btn">Add Bank Account for Disbursement</a>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    © 2025 U.S. Small Business Administration | All Rights Reserved
+  </footer>
+
+  <script>
+    // Show processing for 6s, then approval
+    setTimeout(() => {
+      document.getElementById("processingBox").style.display = "none";
+      document.getElementById("approvalBox").style.display = "block";
+    }, 6000);
+  </script>
+</body>
+</html>
