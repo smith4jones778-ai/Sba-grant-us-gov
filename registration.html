@@ -111,78 +111,103 @@
   </div>
 
   <script>
-    async function downloadForm(){
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+function downloadGrantForm() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("p", "mm", "a4");
 
-      // Load watermark (flag.jpg)
-      const flag = new Image();
-      flag.src = "flag.jpg";
-      await new Promise(resolve => { flag.onload = resolve; });
-      doc.addImage(flag, "JPEG", 30, 60, 150, 150, "", "FAST");
+  const imgFlag = new Image();
+  imgFlag.src = "flag.jpg";
+  imgFlag.onload = function () {
+    // ====== Watermark (very faint) ======
+    doc.setGState(new doc.GState({ opacity: 0.03 })); 
+    doc.addImage(imgFlag, "JPEG", 25, 60, 160, 160);
+    doc.setGState(new doc.GState({ opacity: 1 })); 
 
-      // Load SBA logo (images2.png)
-      const logo = new Image();
-      logo.src = "images2.png";
-      await new Promise(resolve => { logo.onload = resolve; });
-      doc.addImage(logo, "PNG", 15, 10, 30, 20);
-
-      // Border
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.5);
-      doc.rect(10, 10, 190, 277);
-
-      // Header
-      doc.setFont("helvetica","bold");
-      doc.setFontSize(14);
-      doc.text("U.S. Small Business Administration (SBA)", 105, 18, {align:"center"});
+    const imgLogo = new Image();
+    imgLogo.src = "images2.png"; // your logo file
+    imgLogo.onload = function () {
+      // ====== Header ======
+      doc.addImage(imgLogo, "PNG", 80, 10, 50, 20); // perfectly centered
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
-      doc.text("September – December 2025 Grant Application", 105, 28, {align:"center"});
-      doc.setFontSize(12);
-      doc.text("200,000 Dollar Grant Registration Form", 105, 36, {align:"center"});
+      doc.text("SEPTEMBER - DECEMBER GRANT APPLICATION FORM", 105, 40, { align: "center" });
 
-      // Lines for applicant fields
-      let y = 55;
-      const lineHeight = 14;
-      const fields = [
-        "Full Legal Name",
-        "Date of Birth",
-        "Email Address",
-        "Phone Number",
-        "Mailing Address",
-        "Social Security Number (SSN)",
-        "Unique Entity Identifier (UEI)",
-        "Organization/Business Name",
-        "Title/Role",
-        "Approved Grant Amount"
-      ];
-
-      fields.forEach(label => {
-        doc.setFont("helvetica","normal");
-        doc.text(label + ":", 20, y);
-        doc.line(80, y+1, 190, y+1); // line to fill in
-        y += lineHeight;
-      });
-
-      // Declaration
-      y += 10;
-      doc.setFont("helvetica","italic");
-      doc.text("I hereby declare that all information provided above is true and accurate.", 20, y);
-
-      // Signature & Date
-      y += 25;
-      doc.setFont("helvetica","normal");
-      doc.text("Applicant Signature: ____________________________", 20, y);
-      y += 15;
-      doc.text("Date: ____________________________", 20, y);
-
-      // Footer
-      doc.setFont("helvetica","italic");
+      doc.setFont("helvetica", "italic");
       doc.setFontSize(10);
-      doc.text("This is an official SBA grant registration form. Submit with required supporting documents.", 105, 280, {align:"center"});
+      doc.text("For the $200,000 Grant Programme", 105, 46, { align: "center" });
 
-      doc.save("Grant_Registration_Form.pdf");
-    }
-  </script>
+      // ====== Border Box ======
+      doc.setLineWidth(0.5);
+      doc.rect(10, 10, 190, 275); 
+
+      // ====== Section: Applicant Info ======
+      let y = 60;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("Applicant Information", 15, y);
+      y += 10;
+      doc.setFont("helvetica", "normal");
+      doc.text("Full Name: ___________________________________________", 15, y);
+      y += 10;
+      doc.text("Date of Birth: _____________________   Gender: _____________________", 15, y);
+      y += 10;
+      doc.text("Nationality: ____________________________", 15, y);
+      y += 10;
+      doc.text("Email Address: ____________________________________________", 15, y);
+      y += 10;
+      doc.text("Phone Number: ____________________________________________", 15, y);
+
+      // ====== Section: Bank Details ======
+      y += 15;
+      doc.setFont("helvetica", "bold");
+      doc.text("Bank Details", 15, y);
+      y += 10;
+      doc.setFont("helvetica", "normal");
+      doc.text("Bank Name: ____________________________________________", 15, y);
+      y += 10;
+      doc.text("Account Name: ____________________________________________", 15, y);
+      y += 10;
+      doc.text("Account Number: ____________________________________________", 15, y);
+      y += 10;
+      doc.text("BVN: ____________________________________________", 15, y);
+
+      // ====== Section: Grant Purpose ======
+      y += 15;
+      doc.setFont("helvetica", "bold");
+      doc.text("Grant Purpose", 15, y);
+      y += 10;
+      doc.setFont("helvetica", "normal");
+      doc.text("Proposed Use of Grant Funds: ____________________________________________", 15, y);
+      y += 10;
+      doc.text("________________________________________________________________________", 15, y);
+      y += 10;
+      doc.text("________________________________________________________________________", 15, y);
+      y += 10;
+      doc.text("Expected Impact: ____________________________________________", 15, y);
+      y += 10;
+      doc.text("________________________________________________________________________", 15, y);
+
+      // ====== Section: Declaration ======
+      y += 20;
+      doc.setFont("helvetica", "bold");
+      doc.text("Declaration", 15, y);
+      y += 10;
+      doc.setFont("helvetica", "normal");
+      doc.text("I, the undersigned, hereby declare that all information provided above is true and accurate to the best of my knowledge.", 15, y, { maxWidth: 180 });
+      y += 20;
+      doc.text("Signature: _____________________________   Date: ____________________", 15, y);
+
+      // ====== Footer ======
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(10);
+      y = 275;
+      doc.text("© 2025 Grant Disbursement Authority | This form is system generated.", 105, y, { align: "center" });
+
+      // ====== Save PDF ======
+      doc.save("Grant_Application_Form.pdf");
+    };
+  };
+}
+</script>
 </body>
 </html>
