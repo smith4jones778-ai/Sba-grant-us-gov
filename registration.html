@@ -1,178 +1,420 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grant Registration Form</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Grant Registration — Official Form</title>
+
+  <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Fonts & styles -->
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Nunito', sans-serif;
-      background: #f5f7fa;
-      color: #222;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      padding: 20px;
+    :root{
+      --primary:#0b3d91;
+      --muted:#666;
+      --card-bg:#fff;
+      --page-bg:#f4f7fb;
     }
-
-    .form-container {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      padding: 30px 40px;
-      max-width: 700px;
-      width: 100%;
-      text-align: center;
+    html,body{height:100%;margin:0;font-family:'Nunito',sans-serif;background:var(--page-bg);color:#222}
+    .wrap{max-width:980px;margin:28px auto;padding:22px}
+    header{background:#fff;border-radius:10px;padding:18px 22px;display:flex;align-items:center;gap:18px;box-shadow:0 6px 18px rgba(8,30,63,0.06)}
+    header img{height:56px;object-fit:contain;margin:auto 0}
+    header .title{flex:1}
+    header h1{margin:0;font-size:20px;color:var(--primary)}
+    header p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+    .card{background:var(--card-bg);border-radius:10px;padding:22px;margin-top:18px;box-shadow:0 6px 18px rgba(8,30,63,0.06)}
+    .intro{max-width:780px;margin:0 auto 18px auto;text-align:center}
+    form{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    label{font-weight:600;font-size:13px;color:#222;margin-bottom:6px;display:block}
+    input[type=text],input[type=email],input[type=url],input[type=date],select,textarea{
+      width:100%;padding:10px;border:1px solid #d6dbe6;border-radius:8px;font-size:14px;
+      box-sizing:border-box;
     }
-
-    h1 {
-      font-size: 24px;
-      margin-bottom: 10px;
-      color: #1b3b5f;
-    }
-
-    p {
-      font-size: 15px;
-      color: #555;
-      margin-bottom: 25px;
-    }
-
-    button {
-      background: #1b3b5f;
-      color: #fff;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    button:hover {
-      background: #244f7a;
-    }
-
-    footer {
-      margin-top: 25px;
-      font-size: 13px;
-      color: #666;
+    textarea{min-height:90px;resize:vertical}
+    .full{grid-column:1 / -1}
+    .actions{display:flex;gap:12px;justify-content:center;margin-top:18px}
+    .btn{background:var(--primary);color:#fff;padding:12px 18px;border-radius:8px;border:0;font-weight:700;cursor:pointer}
+    .btn.secondary{background:#fff;color:var(--primary);border:1px solid #cfe0ff}
+    .small{font-size:13px;color:var(--muted);text-align:center;margin-top:12px}
+    footer{margin-top:18px;text-align:center;color:#8b98b5;font-size:13px}
+    @media (max-width:820px){
+      form{grid-template-columns:1fr}
+      header{flex-direction:column;align-items:flex-start;gap:8px}
+      header img{height:48px}
     }
   </style>
 </head>
 <body>
+  <div class="wrap">
+    <header>
+      <img src="images2.png" alt="Agency Logo" id="pageLogo">
+      <div class="title">
+        <h1>Official Grant Registration — September–December 2025</h1>
+        <p>200,000 Dollar Grant Programme — Official Registration Form (U.S. Applicants)</p>
+      </div>
+      <div style="text-align:right">
+        <small style="color:#888;display:block">Form version: 2025.09</small>
+        <small style="color:#888;display:block">Printable PDF ready</small>
+      </div>
+    </header>
 
-  <div class="form-container">
-    <h1>Grant Registration Form</h1>
-    <p>Click below to download the official <strong>September - December 2025 Grant Application Form</strong>.<br>
-      Please fill the form manually after download and submit as instructed.</p>
-    <button onclick="downloadGrantForm()">📄 Download Grant Form (PDF)</button>
+    <div class="card intro">
+      <p style="margin:0 0 8px 0;font-size:15px;color:#333">
+        Complete the fields below — then click <strong>Download PDF</strong> to print the official two-page application form.
+      </p>
+      <p class="small">This page collects applicant-provided info only. The generated PDF is a professional, print-ready form with centered logo and faint official watermark.</p>
+    </div>
+
+    <div class="card">
+      <form id="grantForm">
+        <!-- Applicant Info -->
+        <div class="full"><strong style="font-size:14px;color:var(--primary)">Applicant Information</strong></div>
+
+        <div>
+          <label for="fullname">Full Legal Name (as on ID)</label>
+          <input id="fullname" type="text" placeholder="e.g. Jane Alexandra Doe">
+        </div>
+
+        <div>
+          <label for="dob">Date of Birth</label>
+          <input id="dob" type="date">
+        </div>
+
+        <div>
+          <label for="ssn_ein">SSN (for individuals) / EIN (for businesses)</label>
+          <input id="ssn_ein" type="text" placeholder="SSN or EIN">
+        </div>
+
+        <div>
+          <label for="citizen">U.S. Citizen / Legal Resident?</label>
+          <select id="citizen">
+            <option value="">Select status</option>
+            <option>U.S. Citizen</option>
+            <option>U.S. Permanent Resident (Green Card)</option>
+            <option>Non-resident (ineligible)</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="business_name">Business / Organization Name (if applicable)</label>
+          <input id="business_name" type="text" placeholder="e.g. Acme Innovations LLC">
+        </div>
+
+        <div>
+          <label for="business_address">Business Address (Street, City, State, ZIP)</label>
+          <input id="business_address" type="text" placeholder="123 Main St, Anytown, NY 10001">
+        </div>
+
+        <div>
+          <label for="email">Email Address</label>
+          <input id="email" type="email" placeholder="name@example.com">
+        </div>
+
+        <div>
+          <label for="phone">Phone Number</label>
+          <input id="phone" type="text" placeholder="(555) 555-0123">
+        </div>
+
+        <div>
+          <label for="website">Business Website</label>
+          <input id="website" type="url" placeholder="https://">
+        </div>
+
+        <div class="full">
+          <label for="proposal_url">Proposal Document URL (link to proposal / cloud file)</label>
+          <input id="proposal_url" type="url" placeholder="https://drive.google.com/...">
+        </div>
+
+        <!-- USA validation & checklist -->
+        <div class="full" style="margin-top:10px">
+          <strong style="font-size:14px;color:var(--primary)">U.S. Validation & Checklist</strong>
+        </div>
+
+        <div style="grid-column:1 / -1">
+          <label style="font-weight:600">Please confirm the following (check before printing):</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+            <label><input type="checkbox" id="chk_us_id"> I confirm I am a U.S. Citizen or Permanent Resident</label>
+            <label><input type="checkbox" id="chk_ssn"> I have provided truthful SSN/EIN information</label>
+            <label><input type="checkbox" id="chk_proposal"> Proposal document URL is accessible</label>
+            <label><input type="checkbox" id="chk_doc"> I will attach required supporting documents when submitting</label>
+          </div>
+        </div>
+
+        <div class="full">
+          <label for="signature_note">Notes for signature (printed form)</label>
+          <textarea id="signature_note" placeholder="Any additional note for signatory..."></textarea>
+        </div>
+
+        <div class="actions full">
+          <button type="button" class="btn" onclick="generateTwoPagePDF()">📄 Download Official PDF (2 pages)</button>
+          <button type="button" class="btn secondary" onclick="window.print()">🖨️ Print Page</button>
+        </div>
+
+        <div class="small full">By downloading you acknowledge this is an application; eligibility and disbursement are subject to verification and approval.</div>
+      </form>
+    </div>
+
+    <footer>© 2025 Grant Disbursement Authority — U.S. Applicants only</footer>
   </div>
 
-  <footer>© 2025 Grant Disbursement Authority. All Rights Reserved.</footer>
-
   <script>
-    function downloadGrantForm() {
+    // Helper to load image as promise
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = (e) => reject(e);
+        img.src = src;
+      });
+    }
+
+    // Generate two-page professional PDF
+    async function generateTwoPagePDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF("p", "mm", "a4");
 
-      const imgFlag = new Image();
-      imgFlag.src = "flag.jpg"; // watermark
-      imgFlag.onload = function () {
-        // ===== Watermark (very faint) =====
-        doc.setGState(new doc.GState({ opacity: 0.03 }));
-        doc.addImage(imgFlag, "JPEG", 25, 60, 160, 160);
-        doc.setGState(new doc.GState({ opacity: 1 }));
+      // Attempt to load images (logo + watermark), continue gracefully if not available
+      let imgLogo = null, imgFlag = null;
+      try { imgLogo = await loadImage("images2.png"); } catch(e){ /* logo missing — continue */ }
+      try { imgFlag = await loadImage("flag.jpg"); } catch(e){ /* watermark missing — continue */ }
 
-        const imgLogo = new Image();
-        imgLogo.src = "images2.png"; // logo
-        imgLogo.onload = function () {
-          // ===== Header Logo =====
-          doc.addImage(imgLogo, "PNG", 80, 10, 50, 20); // centered logo
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(16);
-          doc.text("SEPTEMBER - DECEMBER GRANT APPLICATION FORM", 105, 40, { align: "center" });
+      // --- Page 1 ---
+      // Very faint watermark (if available)
+      if (imgFlag) {
+        try {
+          doc.setGState(new doc.GState({ opacity: 0.025 }));
+          doc.addImage(imgFlag, "JPEG", 25, 60, 160, 160);
+          doc.setGState(new doc.GState({ opacity: 1 }));
+        } catch(e) { /* ignore */ }
+      }
 
-          doc.setFont("helvetica", "italic");
+      // centered logo
+      if (imgLogo) {
+        const logoW = 60, logoH = 28;
+        const centerX = (210 - logoW) / 2; // A4 width 210mm
+        doc.addImage(imgLogo, "PNG", centerX, 12, logoW, logoH);
+      }
+
+      // Header block
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("SEPTEMBER – DECEMBER 2025 GRANT APPLICATION", 105, 50, { align: "center" });
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text("200,000 Dollar Grant Programme — Official Registration Form (U.S. Applicants)", 105, 56, { align: "center", maxWidth: 180 });
+
+      // top border box
+      doc.setLineWidth(0.6);
+      doc.rect(10, 10, 190, 277); // margin
+
+      // Subsections with fill lines (left column normally)
+      let y = 72;
+      const lineGap = 9;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("Applicant Information", 15, y);
+      y += 8;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+
+      // helper to draw label + line; allow optional value display if user entered it on page
+      const drawField = (label, value, x=15) => {
+        const maxX = 190;
+        doc.text(label + ":", x, y);
+        const lineStart = x + 55;
+        const lineY = y + 1.5;
+        doc.setLineWidth(0.4);
+        doc.line(lineStart, lineY, maxX, lineY);
+        if (value) {
+          // print value slightly above the line to simulate prefill
           doc.setFontSize(10);
-          doc.text("For the $200,000 Grant Programme", 105, 46, { align: "center" });
-
-          // ===== Border Box =====
-          doc.setLineWidth(0.5);
-          doc.rect(10, 10, 190, 275);
-
-          // ===== Applicant Info =====
-          let y = 60;
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(12);
-          doc.text("Applicant Information", 15, y);
-          y += 10;
-          doc.setFont("helvetica", "normal");
-          doc.text("Full Name: ___________________________________________", 15, y);
-          y += 10;
-          doc.text("Date of Birth: _____________________   Gender: _____________________", 15, y);
-          y += 10;
-          doc.text("Nationality: ____________________________", 15, y);
-          y += 10;
-          doc.text("Email Address: ____________________________________________", 15, y);
-          y += 10;
-          doc.text("Phone Number: ____________________________________________", 15, y);
-
-          // ===== Bank Details =====
-          y += 15;
-          doc.setFont("helvetica", "bold");
-          doc.text("Bank Details", 15, y);
-          y += 10;
-          doc.setFont("helvetica", "normal");
-          doc.text("Bank Name: ____________________________________________", 15, y);
-          y += 10;
-          doc.text("Account Name: ____________________________________________", 15, y);
-          y += 10;
-          doc.text("Account Number: ____________________________________________", 15, y);
-          y += 10;
-          doc.text("BVN: ____________________________________________", 15, y);
-
-          // ===== Grant Purpose =====
-          y += 15;
-          doc.setFont("helvetica", "bold");
-          doc.text("Grant Purpose", 15, y);
-          y += 10;
-          doc.setFont("helvetica", "normal");
-          doc.text("Proposed Use of Grant Funds: ____________________________________________", 15, y);
-          y += 10;
-          doc.text("________________________________________________________________________", 15, y);
-          y += 10;
-          doc.text("________________________________________________________________________", 15, y);
-          y += 10;
-          doc.text("Expected Impact: ____________________________________________", 15, y);
-          y += 10;
-          doc.text("________________________________________________________________________", 15, y);
-
-          // ===== Declaration =====
-          y += 20;
-          doc.setFont("helvetica", "bold");
-          doc.text("Declaration", 15, y);
-          y += 10;
-          doc.setFont("helvetica", "normal");
-          doc.text("I, the undersigned, hereby declare that all information provided above is true and accurate to the best of my knowledge.", 15, y, { maxWidth: 180 });
-          y += 20;
-          doc.text("Signature: _____________________________   Date: ____________________", 15, y);
-
-          // ===== Footer =====
-          doc.setFont("helvetica", "italic");
-          doc.setFontSize(10);
-          y = 275;
-          doc.text("© 2025 Grant Disbursement Authority | This form is system generated.", 105, y, { align: "center" });
-
-          doc.save("Grant_Application_Form.pdf");
-        };
+          doc.text(String(value).slice(0,80), lineStart + 2, y - 1.2);
+          doc.setFontSize(11);
+        }
+        y += lineGap;
       };
+
+      // read values from page but don't force them — if empty will leave blanks
+      const form = document.getElementById("grantForm");
+      const getVal = id => (document.getElementById(id) ? document.getElementById(id).value.trim() : "");
+
+      drawField("Full Legal Name", getVal("fullname"));
+      drawField("Date of Birth", getVal("dob"));
+      drawField("SSN / EIN", getVal("ssn_ein"));
+      drawField("U.S. Status (Citizen/Resident)", getVal("citizen"));
+      drawField("Business / Organization Name", getVal("business_name"));
+      drawField("Business Mailing Address", getVal("business_address"));
+      drawField("Email Address", getVal("email"));
+      drawField("Phone Number", getVal("phone"));
+      drawField("Business Website", getVal("website"));
+      drawField("Proposal Document URL", getVal("proposal_url"));
+
+      // small spacer
+      y += 6;
+
+      // USA Validation checklist area
+      doc.setFont("helvetica", "bold");
+      doc.text("U.S. Validation & Checklist", 15, y);
+      y += 8;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text("Please ensure you have the required evidence and documentation to support your application:", 15, y, { maxWidth: 180 });
+      y += 7;
+      const checklist = [
+        "Proof of U.S. citizenship / permanent residency (copy of ID)",
+        "Valid SSN or EIN documentation",
+        "Completed proposal document (uploaded and accessible)",
+        "Business registration documents (if applicable)",
+        "Completed W9 (for payment verification, if applicable)"
+      ];
+      checklist.forEach(item => {
+        doc.circle(15, y - 1.8, 1.5, "S"); // checkbox circle
+        doc.text(item, 20, y);
+        y += 7;
+      });
+
+      // end page 1 content
+      // add signature area at bottom of page 1
+      y = 200;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("Declaration and Signature", 15, y);
+      y += 8;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      const declaration = "I hereby declare that the information provided in this application is true and accurate. I understand that any false statement may result in disqualification.";
+      doc.text(declaration, 15, y, { maxWidth: 180 });
+      y += 28;
+      doc.text("Applicant Signature: ________________________________      Date: ________________", 15, y);
+
+      // Page footer small
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "italic");
+      doc.text("Form ID: " + generateApplicationID() + "    Issued: " + formatDate(new Date()), 105, 287, { align: "center" });
+
+      // --- Page 2 ---
+      doc.addPage();
+
+      // watermark again on page 2
+      if (imgFlag) {
+        try {
+          doc.setGState(new doc.GState({ opacity: 0.025 }));
+          doc.addImage(imgFlag, "JPEG", 25, 60, 160, 160);
+          doc.setGState(new doc.GState({ opacity: 1 }));
+        } catch(e) {}
+      }
+
+      // header on page 2
+      if (imgLogo) {
+        const logoW = 60, logoH = 28;
+        const centerX = (210 - logoW) / 2;
+        doc.addImage(imgLogo, "PNG", centerX, 12, logoW, logoH);
+      }
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("SUPPLEMENTARY INFORMATION (Page 2 of 2)", 105, 48, { align: "center" });
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text("Additional details, budget summary, and document checklist for the review panel.", 105, 54, { align: "center", maxWidth: 180 });
+
+      // border
+      doc.setLineWidth(0.6);
+      doc.rect(10, 10, 190, 277);
+
+      // Budget summary block
+      let y2 = 70;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("Budget Summary (High-level)", 15, y2);
+      y2 += 8;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      const budgetLines = [
+        "Total grant requested: $200,000",
+        "Personnel costs: _____________________________",
+        "Equipment and supplies: _____________________",
+        "Services / Contractors: ______________________",
+        "Other (explain): _____________________________"
+      ];
+      budgetLines.forEach(line => {
+        doc.text(line, 15, y2);
+        y2 += 8;
+      });
+
+      y2 += 6;
+      doc.setFont("helvetica", "bold");
+      doc.text("Referees / Contact for Verification", 15, y2);
+      y2 += 8;
+      doc.setFont("helvetica", "normal");
+      const refereeLines = [
+        "Referee 1: Name: ______________________  Phone: ______________  Email: ____________________",
+        "Referee 2: Name: ______________________  Phone: ______________  Email: ____________________"
+      ];
+      refereeLines.forEach(l => { doc.text(l, 15, y2); y2 += 8; });
+
+      y2 += 6;
+      doc.setFont("helvetica", "bold");
+      doc.text("Required Documents Checklist", 15, y2);
+      y2 += 8;
+      doc.setFont("helvetica", "normal");
+      const checklist2 = [
+        "Proposal document (detailed) — URL / printed copy",
+        "Budget breakdown (detailed)",
+        "Proof of identity (SSN / ID)",
+        "Business registration / EIN (if applicable)",
+        "W9 form (if payments will be issued)"
+      ];
+      checklist2.forEach(item => {
+        doc.text("□  " + item, 15, y2);
+        y2 += 8;
+      });
+
+      y2 += 10;
+      doc.setFont("helvetica", "bold");
+      doc.text("Reviewer Use Only", 15, y2);
+      y2 += 8;
+      doc.setFont("helvetica", "normal");
+      const reviewerLines = [
+        "Eligibility: □ Eligible   □ Not Eligible    Notes: ______________________________",
+        "Panel Score: ______ / 100   Recommendation: □ Approve   □ Decline   Notes: _____________",
+        "Disbursement Check: □ W9 on file   □ Tax verification   □ Payment scheduled"
+      ];
+      reviewerLines.forEach(l => { doc.text(l, 15, y2); y2 += 8; });
+
+      // final signature & date (review panel)
+      y2 = 240;
+      doc.text("Reviewer Name: _________________________   Reviewer Signature: ____________________   Date: ____________", 15, y2);
+      y2 += 12;
+      doc.text("Office Use Only - Processing Notes:", 15, y2);
+      y2 += 6;
+      doc.text("_____________________________________________________________________________________", 15, y2);
+      y2 += 8;
+      doc.text("_____________________________________________________________________________________", 15, y2);
+
+      // footer page 2
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "italic");
+      doc.text("This form is for application purposes only. Completion does not guarantee approval.", 105, 287, { align: "center" });
+
+      // Save file
+      doc.save("Grant_Application_Form_2pages.pdf");
+    }
+
+    // small helper utilities
+    function generateApplicationID() {
+      const d = new Date();
+      const y = d.getFullYear().toString().slice(-2);
+      const mm = String(d.getMonth()+1).padStart(2,"0");
+      const dd = String(d.getDate()).padStart(2,"0");
+      const rand = String(Math.floor(Math.random()*9000)+1000);
+      return `GR-${y}${mm}${dd}-${rand}`;
+    }
+    function formatDate(d) {
+      return d.toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
     }
   </script>
-
 </body>
 </html>
