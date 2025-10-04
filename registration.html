@@ -3,211 +3,176 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grant Registration | SBA</title>
+  <title>Grant Registration Form</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
+      font-family: 'Nunito', sans-serif;
+      background: #f5f7fa;
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
       margin: 0;
-      padding: 0;
+      padding: 20px;
     }
-    header {
-      background: #005ea2;
-      color: #fff;
-      padding: 15px 20px;
+
+    .form-container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      padding: 30px 40px;
+      max-width: 700px;
+      width: 100%;
       text-align: center;
     }
-    .container {
-      max-width: 700px;
-      margin: 30px auto;
-      background: #fff;
-      padding: 25px;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      position: relative;
-      overflow: hidden;
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #1b3b5f;
     }
-    .container::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: url("flag.jpg") center center no-repeat;
-      background-size: 300px;
-      opacity: 0.05;  /* faint watermark */
-      z-index: 0;
+
+    p {
+      font-size: 15px;
+      color: #555;
+      margin-bottom: 25px;
     }
-    form {
-      position: relative;
-      z-index: 1;
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
+
     button {
-      margin-top: 25px;
-      background: #005ea2;
+      background: #1b3b5f;
       color: #fff;
-      padding: 12px 20px;
       border: none;
-      border-radius: 6px;
-      cursor: pointer;
+      padding: 12px 24px;
+      border-radius: 8px;
       font-size: 16px;
-      font-weight: bold;
-      width: 100%;
+      cursor: pointer;
       transition: background 0.3s;
     }
+
     button:hover {
-      background: #004080;
+      background: #244f7a;
+    }
+
+    footer {
+      margin-top: 25px;
+      font-size: 13px;
+      color: #666;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🇺🇸 SBA Grant Registration Form</h1>
-  </header>
 
-  <div class="container">
-    <form id="grantForm">
-      <label for="fullname">Full Legal Name</label>
-      <input type="text" id="fullname" required>
-
-      <label for="dob">Date of Birth</label>
-      <input type="date" id="dob" required>
-
-      <label for="email">Email Address</label>
-      <input type="email" id="email" required>
-
-      <label for="phone">Phone Number</label>
-      <input type="text" id="phone" required>
-
-      <label for="address">Mailing Address</label>
-      <input type="text" id="address" required>
-
-      <label for="ssn">Social Security Number (SSN)</label>
-      <input type="text" id="ssn" required>
-
-      <label for="uei">Unique Entity Identifier (UEI)</label>
-      <input type="text" id="uei">
-
-      <label for="business">Organization/Business Name</label>
-      <input type="text" id="business">
-
-      <label for="role">Title/Role</label>
-      <input type="text" id="role">
-
-      <button type="button" onclick="downloadForm()">📄 Download Grant Form (PDF)</button>
-    </form>
+  <div class="form-container">
+    <h1>Grant Registration Form</h1>
+    <p>Click below to download the official <strong>September - December 2025 Grant Application Form</strong>.<br>
+      Please fill the form manually after download and submit as instructed.</p>
+    <button onclick="downloadGrantForm()">📄 Download Grant Form (PDF)</button>
   </div>
 
+  <footer>© 2025 Grant Disbursement Authority. All Rights Reserved.</footer>
+
   <script>
-function downloadGrantForm() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF("p", "mm", "a4");
+    function downloadGrantForm() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF("p", "mm", "a4");
 
-  const imgFlag = new Image();
-  imgFlag.src = "flag.jpg";
-  imgFlag.onload = function () {
-    // ====== Watermark (very faint) ======
-    doc.setGState(new doc.GState({ opacity: 0.03 })); 
-    doc.addImage(imgFlag, "JPEG", 25, 60, 160, 160);
-    doc.setGState(new doc.GState({ opacity: 1 })); 
+      const imgFlag = new Image();
+      imgFlag.src = "flag.jpg"; // watermark
+      imgFlag.onload = function () {
+        // ===== Watermark (very faint) =====
+        doc.setGState(new doc.GState({ opacity: 0.03 }));
+        doc.addImage(imgFlag, "JPEG", 25, 60, 160, 160);
+        doc.setGState(new doc.GState({ opacity: 1 }));
 
-    const imgLogo = new Image();
-    imgLogo.src = "images2.png"; // your logo file
-    imgLogo.onload = function () {
-      // ====== Header ======
-      doc.addImage(imgLogo, "PNG", 80, 10, 50, 20); // perfectly centered
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.text("SEPTEMBER - DECEMBER GRANT APPLICATION FORM", 105, 40, { align: "center" });
+        const imgLogo = new Image();
+        imgLogo.src = "images2.png"; // logo
+        imgLogo.onload = function () {
+          // ===== Header Logo =====
+          doc.addImage(imgLogo, "PNG", 80, 10, 50, 20); // centered logo
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(16);
+          doc.text("SEPTEMBER - DECEMBER GRANT APPLICATION FORM", 105, 40, { align: "center" });
 
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(10);
-      doc.text("For the $200,000 Grant Programme", 105, 46, { align: "center" });
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(10);
+          doc.text("For the $200,000 Grant Programme", 105, 46, { align: "center" });
 
-      // ====== Border Box ======
-      doc.setLineWidth(0.5);
-      doc.rect(10, 10, 190, 275); 
+          // ===== Border Box =====
+          doc.setLineWidth(0.5);
+          doc.rect(10, 10, 190, 275);
 
-      // ====== Section: Applicant Info ======
-      let y = 60;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("Applicant Information", 15, y);
-      y += 10;
-      doc.setFont("helvetica", "normal");
-      doc.text("Full Name: ___________________________________________", 15, y);
-      y += 10;
-      doc.text("Date of Birth: _____________________   Gender: _____________________", 15, y);
-      y += 10;
-      doc.text("Nationality: ____________________________", 15, y);
-      y += 10;
-      doc.text("Email Address: ____________________________________________", 15, y);
-      y += 10;
-      doc.text("Phone Number: ____________________________________________", 15, y);
+          // ===== Applicant Info =====
+          let y = 60;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(12);
+          doc.text("Applicant Information", 15, y);
+          y += 10;
+          doc.setFont("helvetica", "normal");
+          doc.text("Full Name: ___________________________________________", 15, y);
+          y += 10;
+          doc.text("Date of Birth: _____________________   Gender: _____________________", 15, y);
+          y += 10;
+          doc.text("Nationality: ____________________________", 15, y);
+          y += 10;
+          doc.text("Email Address: ____________________________________________", 15, y);
+          y += 10;
+          doc.text("Phone Number: ____________________________________________", 15, y);
 
-      // ====== Section: Bank Details ======
-      y += 15;
-      doc.setFont("helvetica", "bold");
-      doc.text("Bank Details", 15, y);
-      y += 10;
-      doc.setFont("helvetica", "normal");
-      doc.text("Bank Name: ____________________________________________", 15, y);
-      y += 10;
-      doc.text("Account Name: ____________________________________________", 15, y);
-      y += 10;
-      doc.text("Account Number: ____________________________________________", 15, y);
-      y += 10;
-      doc.text("BVN: ____________________________________________", 15, y);
+          // ===== Bank Details =====
+          y += 15;
+          doc.setFont("helvetica", "bold");
+          doc.text("Bank Details", 15, y);
+          y += 10;
+          doc.setFont("helvetica", "normal");
+          doc.text("Bank Name: ____________________________________________", 15, y);
+          y += 10;
+          doc.text("Account Name: ____________________________________________", 15, y);
+          y += 10;
+          doc.text("Account Number: ____________________________________________", 15, y);
+          y += 10;
+          doc.text("BVN: ____________________________________________", 15, y);
 
-      // ====== Section: Grant Purpose ======
-      y += 15;
-      doc.setFont("helvetica", "bold");
-      doc.text("Grant Purpose", 15, y);
-      y += 10;
-      doc.setFont("helvetica", "normal");
-      doc.text("Proposed Use of Grant Funds: ____________________________________________", 15, y);
-      y += 10;
-      doc.text("________________________________________________________________________", 15, y);
-      y += 10;
-      doc.text("________________________________________________________________________", 15, y);
-      y += 10;
-      doc.text("Expected Impact: ____________________________________________", 15, y);
-      y += 10;
-      doc.text("________________________________________________________________________", 15, y);
+          // ===== Grant Purpose =====
+          y += 15;
+          doc.setFont("helvetica", "bold");
+          doc.text("Grant Purpose", 15, y);
+          y += 10;
+          doc.setFont("helvetica", "normal");
+          doc.text("Proposed Use of Grant Funds: ____________________________________________", 15, y);
+          y += 10;
+          doc.text("________________________________________________________________________", 15, y);
+          y += 10;
+          doc.text("________________________________________________________________________", 15, y);
+          y += 10;
+          doc.text("Expected Impact: ____________________________________________", 15, y);
+          y += 10;
+          doc.text("________________________________________________________________________", 15, y);
 
-      // ====== Section: Declaration ======
-      y += 20;
-      doc.setFont("helvetica", "bold");
-      doc.text("Declaration", 15, y);
-      y += 10;
-      doc.setFont("helvetica", "normal");
-      doc.text("I, the undersigned, hereby declare that all information provided above is true and accurate to the best of my knowledge.", 15, y, { maxWidth: 180 });
-      y += 20;
-      doc.text("Signature: _____________________________   Date: ____________________", 15, y);
+          // ===== Declaration =====
+          y += 20;
+          doc.setFont("helvetica", "bold");
+          doc.text("Declaration", 15, y);
+          y += 10;
+          doc.setFont("helvetica", "normal");
+          doc.text("I, the undersigned, hereby declare that all information provided above is true and accurate to the best of my knowledge.", 15, y, { maxWidth: 180 });
+          y += 20;
+          doc.text("Signature: _____________________________   Date: ____________________", 15, y);
 
-      // ====== Footer ======
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(10);
-      y = 275;
-      doc.text("© 2025 Grant Disbursement Authority | This form is system generated.", 105, y, { align: "center" });
+          // ===== Footer =====
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(10);
+          y = 275;
+          doc.text("© 2025 Grant Disbursement Authority | This form is system generated.", 105, y, { align: "center" });
 
-      // ====== Save PDF ======
-      doc.save("Grant_Application_Form.pdf");
-    };
-  };
-}
-</script>
+          doc.save("Grant_Application_Form.pdf");
+        };
+      };
+    }
+  </script>
+
 </body>
 </html>
