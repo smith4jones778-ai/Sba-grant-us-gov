@@ -106,21 +106,19 @@
       <label for="role">Title/Role</label>
       <input type="text" id="role">
 
-      <button type="button" onclick="downloadReceipt()">📄 Download Grant Registration PDF</button>
+      <button type="button" onclick="downloadForm()">📄 Download Blank Grant Form (PDF)</button>
     </form>
   </div>
 
   <script>
-    async function downloadReceipt(){
+    async function downloadForm(){
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
-      // Load watermark logo
+      // Watermark (very faint)
       const img = new Image();
       img.src = "flag.jpg";
       await new Promise(resolve => { img.onload = resolve; });
-
-      // Watermark
       doc.addImage(img, "JPEG", 30, 60, 150, 150, "", "FAST");
       doc.setTextColor(0,0,0);
 
@@ -131,46 +129,51 @@
 
       // Header
       doc.setFont("helvetica","bold");
-      doc.setFontSize(18);
+      doc.setFontSize(16);
       doc.text("September – December 2025", 105, 20, {align: "center"});
       doc.text("200,000 Dollar Grant Registration Form", 105, 30, {align: "center"});
       
+      // Applicant Fields with fillable line spaces
       doc.setFontSize(12);
       doc.setFont("helvetica","normal");
+      let y = 50;
+      const lineHeight = 14;
 
-      const name = document.getElementById("fullname").value;
-      const dob = document.getElementById("dob").value;
-      const email = document.getElementById("email").value;
-      const phone = document.getElementById("phone").value;
-      const address = document.getElementById("address").value;
-      const ssn = document.getElementById("ssn").value;
-      const uei = document.getElementById("uei").value;
-      const business = document.getElementById("business").value;
-      const role = document.getElementById("role").value;
-
-      let y = 60;
-      const lineHeight = 10;
       const fields = [
-        ["Full Legal Name", name],
-        ["Date of Birth", dob],
-        ["Email Address", email],
-        ["Phone Number", phone],
-        ["Mailing Address", address],
-        ["SSN", ssn],
-        ["UEI", uei],
-        ["Business Name", business],
-        ["Title/Role", role],
-        ["Approved Grant", "$200,000"]
+        "Full Legal Name",
+        "Date of Birth",
+        "Email Address",
+        "Phone Number",
+        "Mailing Address",
+        "Social Security Number (SSN)",
+        "Unique Entity Identifier (UEI)",
+        "Organization/Business Name",
+        "Title/Role",
+        "Approved Grant: $200,000"
       ];
 
-      fields.forEach(([label, value])=>{
-        doc.text(`${label}: ${value}`, 20, y);
+      fields.forEach((label)=>{
+        doc.text(label + ":", 20, y);
+        doc.line(80, y+1, 190, y+1); // draw line for writing
         y += lineHeight;
       });
 
+      // Declaration
+      y += 10;
+      doc.setFont("helvetica","italic");
+      doc.text("I hereby declare that all information provided above is true and accurate.", 20, y);
+
+      // Signature lines
+      y += 20;
+      doc.setFont("helvetica","normal");
+      doc.text("Applicant Signature: ____________________________", 20, y);
+      y += 15;
+      doc.text("Date: ____________________________", 20, y);
+
       // Footer
       doc.setFont("helvetica","italic");
-      doc.text("This is a system-generated grant registration form.", 105, 280, {align:"center"});
+      doc.setFontSize(10);
+      doc.text("This is an official SBA grant registration form. Submit with required documents.", 105, 280, {align:"center"});
 
       doc.save("Grant_Registration_Form.pdf");
     }
