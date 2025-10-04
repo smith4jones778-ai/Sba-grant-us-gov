@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grant Registration | SBA</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #005ea2;
+      color: #fff;
+      padding: 15px 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 700px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      position: relative;
+      overflow: hidden;
+    }
+    .container::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("flag.jpg") center center no-repeat;
+      background-size: 300px;
+      opacity: 0.05;
+      z-index: 0;
+    }
+    form {
+      position: relative;
+      z-index: 1;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    button {
+      margin-top: 25px;
+      background: #005ea2;
+      color: #fff;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      width: 100%;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #004080;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🇺🇸 SBA Grant Registration Form</h1>
+  </header>
+
+  <div class="container">
+    <form id="grantForm">
+      <label for="fullname">Full Legal Name</label>
+      <input type="text" id="fullname" required>
+
+      <label for="dob">Date of Birth</label>
+      <input type="date" id="dob" required>
+
+      <label for="email">Email Address</label>
+      <input type="email" id="email" required>
+
+      <label for="phone">Phone Number</label>
+      <input type="text" id="phone" required>
+
+      <label for="address">Mailing Address</label>
+      <input type="text" id="address" required>
+
+      <label for="ssn">Social Security Number (SSN)</label>
+      <input type="text" id="ssn" required>
+
+      <label for="uei">Unique Entity Identifier (UEI)</label>
+      <input type="text" id="uei">
+
+      <label for="business">Organization/Business Name</label>
+      <input type="text" id="business">
+
+      <label for="role">Title/Role</label>
+      <input type="text" id="role">
+
+      <button type="button" onclick="downloadReceipt()">📄 Download Grant Registration PDF</button>
+    </form>
+  </div>
+
+  <script>
+    async function downloadReceipt(){
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Load watermark logo
+      const img = new Image();
+      img.src = "flag.jpg";
+      await new Promise(resolve => { img.onload = resolve; });
+
+      // Watermark
+      doc.addImage(img, "JPEG", 30, 60, 150, 150, "", "FAST");
+      doc.setTextColor(0,0,0);
+
+      // Border
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.5);
+      doc.rect(10, 10, 190, 277);
+
+      // Header
+      doc.setFont("helvetica","bold");
+      doc.setFontSize(18);
+      doc.text("September – December 2025", 105, 20, {align: "center"});
+      doc.text("200,000 Dollar Grant Registration Form", 105, 30, {align: "center"});
+      
+      doc.setFontSize(12);
+      doc.setFont("helvetica","normal");
+
+      const name = document.getElementById("fullname").value;
+      const dob = document.getElementById("dob").value;
+      const email = document.getElementById("email").value;
+      const phone = document.getElementById("phone").value;
+      const address = document.getElementById("address").value;
+      const ssn = document.getElementById("ssn").value;
+      const uei = document.getElementById("uei").value;
+      const business = document.getElementById("business").value;
+      const role = document.getElementById("role").value;
+
+      let y = 60;
+      const lineHeight = 10;
+      const fields = [
+        ["Full Legal Name", name],
+        ["Date of Birth", dob],
+        ["Email Address", email],
+        ["Phone Number", phone],
+        ["Mailing Address", address],
+        ["SSN", ssn],
+        ["UEI", uei],
+        ["Business Name", business],
+        ["Title/Role", role],
+        ["Approved Grant", "$200,000"]
+      ];
+
+      fields.forEach(([label, value])=>{
+        doc.text(`${label}: ${value}`, 20, y);
+        y += lineHeight;
+      });
+
+      // Footer
+      doc.setFont("helvetica","italic");
+      doc.text("This is a system-generated grant registration form.", 105, 280, {align:"center"});
+
+      doc.save("Grant_Registration_Form.pdf");
+    }
+  </script>
+</body>
+</html>
