@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SBA Grant Withdrawal — Demo</title>
+
+  <!-- Favicon placeholders -->
+  <link rel="icon" type="image/png" href="images2.png">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+
+  <style>
+    :root{
+      --gov-blue:#005ea2;
+      --muted:#f5f5f5;
+      --card-bg: rgba(255,255,255,0.96);
+      --accent: #0b78b4;
+      --danger: #c23d3d;
+      --success: #2f8f4e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f9f9f9;
+      color: #222;
+      min-height: 100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* subtle large watermark */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background: url('images2.png') center/300px no-repeat;
+      opacity: 0.04;
+      pointer-events:none;
+      z-index: -1;
+    }
+
+    .gov-bar{
+      background: var(--muted);
+      font-size: 13px;
+      padding: 8px 14px;
+      border-bottom:1px solid #e3e3e3;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .gov-bar .left { color:#333; }
+    .gov-bar a { color:var(--gov-blue); text-decoration:none; margin-left:8px; font-size:13px; }
+
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:14px 18px;
+      border-bottom:1px solid #e8e8e8;
+      background: white;
+    }
+    .branding { display:flex; align-items:center; gap:12px; }
+    .branding img{ height:44px; border-radius:6px; }
+    .header-actions{ display:flex; gap:12px; align-items:center; }
+    .btn{
+      background:var(--gov-blue);
+      color:white;
+      padding:8px 14px;
+      border-radius:4px;
+      border: none;
+      cursor:pointer;
+      font-weight:600;
+    }
+    .btn.ghost{ background:transparent; color:var(--gov-blue); border:1px solid #d7e7f2; }
+
+    .breadcrumb{
+      padding:10px 18px;
+      font-size:14px;
+      color:#333;
+      background:transparent;
+    }
+    .breadcrumb a{ color:var(--gov-blue); text-decoration:none; }
+
+    .main {
+      display:flex;
+      gap:18px;
+      padding:18px;
+      flex:1;
+      flex-wrap:wrap;
+    }
+    .sidebar {
+      width:220px;
+      border-right:1px solid #eee;
+      padding-right:14px;
+    }
+    .sidebar ul { list-style:none; padding:0; margin:0; }
+    .sidebar li { padding:10px 6px; cursor:default; color:#444; }
+    .sidebar li.active{ border-left:4px solid var(--gov-blue); font-weight:700; padding-left:10px; }
+
+    .content{
+      flex:1;
+      min-width:320px;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+    }
+
+    /* card / form container */
+    .card {
+      width:100%;
+      max-width:980px;
+      background:var(--card-bg);
+      border-radius:8px;
+      padding:20px;
+      box-shadow: 0 6px 18px rgba(20,30,40,0.06);
+      border:1px solid #eee;
+      position:relative;
+      overflow:hidden;
+    }
+    .card::before{
+      /* inner watermark */
+      content:"";
+      position:absolute;
+      inset:0;
+      background: url('flag.jpg') center/220px no-repeat;
+      opacity:0.06;
+      pointer-events:none;
+    }
+
+    .page-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .page-title h1 { margin:0; font-size:20px; }
+
+    .sim-note{
+      background:#fffbe6;
+      border-left:6px solid #ffd05b;
+      padding:10px 12px;
+      margin:10px 0 18px;
+      border-radius:4px;
+      color:#7a5200;
+      font-weight:600;
+    }
+
+    .grid {
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    .field {
+      background: white;
+      border:1px solid #e6e6e6;
+      padding:12px;
+      border-radius:6px;
+    }
+    .field label { display:block; font-size:13px; color:#333; margin-bottom:6px; font-weight:600; }
+    .field .value { font-size:15px; color:#111; }
+
+    .right-col {
+      min-width:300px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    /* withdrawal form */
+    .withdraw-card { padding:12px; display:flex; flex-direction:column; gap:10px; }
+    .withdraw-card .small { font-size:13px; color:#666; }
+    .amount-box {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      background:#fff;
+      padding:12px;
+      border-radius:6px;
+      border:1px solid #eee;
+    }
+    .amount { font-size:20px; font-weight:700; color:var(--gov-blue); }
+    .bank-fields { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
+    input[type="text"], input[type="tel"], select {
+      width:100%;
+      padding:10px;
+      border:1px solid #d7d7d7;
+      border-radius:6px;
+      font-size:14px;
+    }
+
+    .muted { color:#666; font-size:13px; }
+
+    .note {
+      font-size:13px;
+      color:#444;
+      background:#fcfcfc;
+      border-left:4px solid #e9eef6;
+      padding:10px;
+      border-radius:6px;
+    }
+
+    footer {
+      padding:14px 18px;
+      text-align:center;
+      border-top:1px solid #eee;
+      font-size:13px;
+      background:white;
+    }
+
+    /* modal */
+    .modal-overlay {
+      position:fixed;
+      inset:0;
+      background: rgba(10,10,10,0.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+    }
+    .modal {
+      width:100%;
+      max-width:560px;
+      background: white;
+      border-radius:8px;
+      padding:18px;
+      box-shadow:0 18px 60px rgba(10,20,40,0.35);
+      position:relative;
+    }
+    .modal h2 { margin:0 0 8px; font-size:18px; color:var(--danger); }
+    .modal .lead { font-weight:600; margin-bottom:8px; }
+    .modal .message { margin-bottom:12px; color:#333; }
+    .countdown {
+      display:flex;
+      gap:8px;
+      font-weight:700;
+      margin-bottom:12px;
+      font-size:16px;
+    }
+    .countdown .seg { background:#f8f9fb; padding:10px 12px; border-radius:6px; border:1px solid #efefef; min-width:72px; text-align:center; }
+    .modal .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
+    .modal .btn-danger { background:var(--danger); }
+    .modal .btn-ghost { background:transparent; border:1px solid #e6e6e6; color:#333; }
+
+    /* responsive tweaks */
+    @media (max-width:880px){
+      .grid { grid-template-columns: 1fr; }
+      .bank-fields { grid-template-columns:1fr; }
+      .sidebar{ display:none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="gov-bar">
+    <div class="left">🇺🇸 An official site</div>
+  </div>
+
+  <header class="header">
+    <div class="branding">
+      <img src="images2.png" alt="SBA Demo">
+      <div>
+        <div style="font-weight:700;">Small Business</div>
+        <div style="font-size:13px;color:#666;">Grant Disbursement</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="breadcrumb" aria-label="Breadcrumbs">
+    <a href="#">Home</a> › <a href="#">Funding Programs</a> › <span>Grant Withdrawal</span>
+  </div>
+
+  <main class="main">
+    <aside class="sidebar">
+      <ul>
+        <li>Grant</li>
+        <li>Investment capital</li>
+      </ul>
+    </aside>
+
+    <section class="content">
+      <div class="card" role="main" aria-labelledby="title">
+        <div class="page-title">
+          <h1 id="title">SBA Grant Withdrawal</h1>
+          <div style="text-align:right;">
+            <div style="font-size:13px;color:#666;">Approved amount</div>
+            <div style="font-weight:800;font-size:18px;color:#222;">$200,000</div>
+          </div>
+        </div>
+
+
+        <div class="grid">
+          <!-- Left: Applicant details -->
+          <div>
+            <div style="font-weight:700;margin-bottom:8px;">Applicant's Details</div>
+
+            <div style="display:grid;gap:10px;">
+              <div class="field">
+                <label>Full Name</label>
+                <div class="value" id="fullName">Stacy Thomas</div>
+              </div>
+
+              <div class="field">
+                <label>Email</label>
+                <div class="value" id="email">netravels1974@gmail.com</div>
+              </div>
+
+              <div class="field">
+                <label>Phone</label>
+                <div class="value" id="phone">404-579-6041</div>
+              </div>
+
+              <div class="field">
+                <label>Address</label>
+                <div class="value" id="address">2589 Laurice Ct, Decatur, GA 30034</div>
+              </div>
+
+              <div class="field">
+                <label>EIN / SSN</label>
+                <div class="value" id="ssn">340-68-5556</div>
+              </div>
+
+              <div class="field">
+                <label>Business</label>
+                <div class="value" id="business">Stacy Thomas LLC</div>
+              </div>
+
+              <div class="field">
+                <label>Date of birth</label>
+                <div class="value" id="dob">May 16, 1974</div>
+              </div>
+
+              <div class="field">
+                <label>Approved amount</label>
+                <div class="value">$200,000</div>
+                <div class="muted" style="margin-top:6px;">Available to withdraw for you: <strong>$20,000</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Withdrawal / Bank details -->
+          <div class="right-col">
+            <div class="withdraw-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div class="small">Requested withdrawal</div>
+                  <div class="amount">$20,000</div>
+                </div>
+                <div class="muted" style="text-align:right;">
+                  <div>Withdrawal limit: <strong>$20,000</strong></div>
+                  <div style="font-size:12px;color:#888;margin-top:6px;"></div>
+                </div>
+              </div>
+
+              <div class="note">
+                Fill your bank details below to withdrawal of <strong>$20,000</strong>.
+              </div>
+
+              <form id="withdrawForm" onsubmit="return handleWithdraw(event);" novalidate>
+                <div style="margin-top:10px;font-weight:700;">Bank details</div>
+
+                <div class="bank-fields" style="margin-top:8px;">
+                  <div>
+                    <label for="bankName" class="small">Bank name</label>
+                    <input id="bankName" type="text" placeholder="e.g., First National Bank" required />
+                  </div>
+                  <div>
+                    <label for="routing" class="small">Routing number</label>
+                    <input id="routing" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="9-digit routing number" required />
+                  </div>
+
+                  <div>
+                    <label for="account" class="small">Account number</label>
+                    <input id="account" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Your account number" required />
+                  </div>
+
+                  <div>
+                    <label for="acctType" class="small">Account type</label>
+                    <select id="acctType" required>
+                      <option value="">Choose type</option>
+                      <option>Checking</option>
+                      <option>Savings</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-top:12px;align-items:center;">
+                  <button class="btn" type="submit">Withdraw $20,000</button>
+                  
+                </div>
+
+                <div id="formError" class="muted" style="margin-top:8px;color:var(--danger);display:none;"></div>
+              </form>
+
+              
+
+            <!-- status / logs -->
+            <div style="background:white;padding:12px;border-radius:6px;border:1px solid #eee;">
+              <div style="font-weight:700;margin-bottom:6px;">Transaction status</div>
+              <div id="txnLog" class="muted">No withdrawal attempts yet.</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    © 2025 Official Use Only.
+  </footer>
+
+  <!-- Modal: failed withdrawal -->
+  <div id="modalOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal" role="document">
+      <h2 id="modalTitle">Failed withdrawal</h2>
+      <div class="lead">Activate your account to initiate your withdrawal for <strong>$20,000</strong>.</div>
+      <div class="message">
+        Activate your account to initiate your withdrawal for $20k as requested with the IRS. Is required to proceed with the disbursement to your bank. Activation fee: <strong>$1,150</strong>.
+        
+      </div>
+
+      <div style="margin-top:8px;font-weight:700;">Activation period remaining</div>
+      <div class="countdown" aria-live="polite" id="countdown">
+        <div class="seg"><div id="cdDays">--</div><div style="font-size:12px;color:#666;">Days</div></div>
+        <div class="seg"><div id="cdHours">--</div><div style="font-size:12px;color:#666;">Hours</div></div>
+        <div class="seg"><div id="cdMinutes">--</div><div style="font-size:12px;color:#666;">Minutes</div></div>
+        <div class="seg"><div id="cdSeconds">--</div><div style="font-size:12px;color:#666;">Seconds</div></div>
+      </div>
+
+      <div style="margin-top:10px;color:#444;">
+        <strong>Pay activation fee:</strong> $1,150 — Now
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Back to withdrawal page</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ---------- Demo data (user provided) ---------- */
+    const demoApplicant = {
+      fullName: "Stacy Thomas",
+      email: "netravels1974@gmail.com",
+      phone: "4045796041",
+      address: "2589 Laurice Ct Decatur ga 30034",
+      ssn: "340685556",
+      business: "Stacy Thomas LLC",
+      dob: "1974-05-16",
+      approvedAmount: 200000,
+      allowedWithdrawAmount: 20000
+    };
+
+    // populate fields (already in HTML but keep data object available)
+    document.getElementById('fullName').textContent = demoApplicant.fullName;
+    document.getElementById('email').textContent = demoApplicant.email;
+    document.getElementById('phone').textContent = formatPhone(demoApplicant.phone);
+    document.getElementById('address').textContent = demoApplicant.address;
+    document.getElementById('ssn').textContent = maskSSN(demoApplicant.ssn);
+    document.getElementById('business').textContent = demoApplicant.business;
+    document.getElementById('dob').textContent = new Date(demoApplicant.dob).toLocaleDateString(undefined, {year:'numeric',month:'long',day:'numeric'});
+
+    function formatPhone(p){
+      // naive formatting
+      if(!p) return p;
+      return p.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3');
+    }
+    function maskSSN(s){
+      if(!s) return s;
+      // show fully as user provided; for safety we show with dashes
+      return s.replace(/^(\d{3})(\d{2})(\d{4})$/, '$1-$2-$3');
+    }
+
+    /* ---------- Countdown timer (5 days from page load) ---------- */
+    const FIVE_DAYS_MS = 5 * 24 * 60 * 60 * 1000;
+    const startTime = new Date().getTime();
+    const deadline = startTime + FIVE_DAYS_MS;
+
+    let countdownInterval = null;
+    function updateCountdown() {
+      const now = new Date().getTime();
+      let diff = deadline - now;
+      if (diff < 0) diff = 0;
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      document.getElementById('cdDays').textContent = String(days).padStart(2,'0');
+      document.getElementById('cdHours').textContent = String(hours).padStart(2,'0');
+      document.getElementById('cdMinutes').textContent = String(minutes).padStart(2,'0');
+      document.getElementById('cdSeconds').textContent = String(seconds).padStart(2,'0');
+
+      if (diff <= 0) {
+        clearInterval(countdownInterval);
+        // indicate expired
+        document.getElementById('countdown').insertAdjacentHTML('beforeend', '<div style="color:#b33;font-weight:700;margin-left:8px;">Activation period expired</div>');
+      }
+    }
+
+    function startCountdown() {
+      updateCountdown();
+      countdownInterval = setInterval(updateCountdown, 1000);
+    }
+
+    /* ---------- Modal control ---------- */
+    const modalOverlay = document.getElementById('modalOverlay');
+    function openModal() {
+      modalOverlay.style.display = 'flex';
+      // start the countdown timer if not started
+      if(!countdownInterval) startCountdown();
+    }
+    function closeModal() {
+      modalOverlay.style.display = 'none';
+    }
+
+    /* ---------- Withdrawal form handling ---------- */
+    const withdrawForm = document.getElementById('withdrawForm');
+    const formError = document.getElementById('formError');
+    const txnLog = document.getElementById('txnLog');
+
+    function handleWithdraw(e){
+      e.preventDefault();
+      formError.style.display = 'none';
+      const bankName = document.getElementById('bankName').value.trim();
+      const routing = document.getElementById('routing').value.trim();
+      const account = document.getElementById('account').value.trim();
+      const acctType = document.getElementById('acctType').value;
+
+      if(!bankName || !routing || !account || !acctType){
+        formError.style.display = 'block';
+        formError.textContent = "Please complete all required bank details.";
+        return false;
+      }
+
+      // Basic routing/account numeric checks (demo validation)
+      if(!/^\d{6,9}$/.test(routing)){
+        formError.style.display = 'block';
+        formError.textContent = "Routing number should be 6-9 digits (demo validation).";
+        return false;
+      }
+      if(!/^\d{6,20}$/.test(account)){
+        formError.style.display = 'block';
+        formError.textContent = "Account number should be 6-20 digits (demo validation).";
+        return false;
+      }
+
+      // Log attempt (simulated)
+      txnLog.textContent = `Attempted withdrawal of $20,000 to ${bankName} — ${acctType} — ${maskLast(account)} — ${new Date().toLocaleString()}. Result: Failed (activation required).`;
+
+      // Open failed withdrawal modal with countdown and activation fee
+      openModal();
+      return false;
+    }
+
+    function maskLast(acct){
+      if(!acct) return '';
+      return '***' + acct.slice(-4);
+    }
+
+    // Auto-fill helper for demo
+    function fillExample(){
+      document.getElementById('bankName').value = "Demo Bank";
+      document.getElementById('routing').value = "03100011";
+      document.getElementById('account').value = "123456789012";
+      document.getElementById('acctType').value = "Checking";
+      formError.style.display = 'none';
+    }
+
+    /* Activation simulation (user clicks activate in modal) */
+    function simulateActivation(){
+      // simulate payment processing (demo)
+      const overlay = modalOverlay;
+      // temporarily replace modal content with processing
+      const modal = overlay.querySelector('.modal');
+      const original = modal.innerHTML;
+      modal.innerHTML = `
+        <div style="text-align:center;padding:28px;">
+          <div style="font-weight:700;font-size:18px;color:var(--gov-blue);margin-bottom:12px;">Processing activation (simulation)</div>
+          <div style="margin-bottom:12px;">Charging activation fee <strong>$1,150</strong> — (simulation only)</div>
+          <div class="spinner" style="border:4px solid #f3f3f3;border-top:4px solid var(--gov-blue);border-radius:50%;width:46px;height:46px;margin:10px auto 18px;animation:spin 1s linear infinite;"></div>
+        </div>
+      `;
+
+      // After short simulated delay restore and show activated status
+      setTimeout(() => {
+        modal.innerHTML = original;
+        closeModal();
+        txnLog.textContent = `Activation simulated and completed for $1,150 (demo). Withdrawal of $20,000 remains pending (simulation). ${new Date().toLocaleString()}`;
+        // Optionally show a small toast - we will briefly show overlay message
+        showTempMessage("Activation simulated. Withdrawal remains pending (demo).");
+      }, 2000);
+    }
+
+    function showTempMessage(msg){
+      const div = document.createElement('div');
+      div.style.position = 'fixed';
+      div.style.right = '18px';
+      div.style.bottom = '18px';
+      div.style.background = 'white';
+      div.style.border = '1px solid #ddd';
+      div.style.padding = '10px 14px';
+      div.style.borderRadius = '6px';
+      div.style.boxShadow = '0 8px 22px rgba(10,20,40,0.12)';
+      div.style.fontWeight = '600';
+      div.textContent = msg;
+      document.body.appendChild(div);
+      setTimeout(()=> div.remove(), 4500);
+    }
+
+    // Small theme toggler (non-essential)
+    function toggleTheme(){
+      document.body.classList.toggle('alt');
+      if(document.body.classList.contains('alt')){
+        document.body.style.background = '#f2f7fb';
+      } else {
+        document.body.style.background = '#f9f9f9';
+      }
+    }
+
+    // Start with countdown ready but hidden until modal opens (still ticking)
+    // We will start timer on page load (so it is fixed from that time)
+    startCountdown();
+
+    // expose handlers for accessibility (in case)
+    window.handleWithdraw = handleWithdraw;
+    window.closeModal = closeModal;
+    window.openModal = openModal;
+    window.simulateActivation = simulateActivation;
+    window.fillExample = fillExample;
+
+    /* small spinner keyframes inserted programmatically for the simulated processing */
+    (function addSpinnerKeyframes(){
+      const style = document.createElement('style');
+      style.textContent = `@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}`;
+      document.head.appendChild(style);
+    })();
+
+  </script>
+</body>
+</html>
