@@ -469,38 +469,56 @@
       return s.replace(/^(\d{3})(\d{2})(\d{4})$/, '$1-$2-$3');
     }
 
-    /* ---------- Countdown timer (5 days from page load) ---------- */
-    const FIVE_DAYS_MS = 5 * 24 * 60 * 60 * 1000;
+  const FIVE_DAYS_MS = 5 * 24 * 60 * 60 * 1000;
+  const STORAGE_KEY = "countdownDeadline";
+
+  // Check if we already have a saved deadline
+  let savedDeadline = localStorage.getItem(STORAGE_KEY);
+  let deadline;
+
+  if (savedDeadline) {
+    deadline = parseInt(savedDeadline, 10);
+  } else {
+    // No saved deadline → create a new one
     const startTime = new Date().getTime();
-    const deadline = startTime + FIVE_DAYS_MS;
+    deadline = startTime + FIVE_DAYS_MS;
+    localStorage.setItem(STORAGE_KEY, deadline);
+  }
 
-    let countdownInterval = null;
-    function updateCountdown() {
-      const now = new Date().getTime();
-      let diff = deadline - now;
-      if (diff < 0) diff = 0;
+  let countdownInterval = null;
 
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  function updateCountdown() {
+    const now = new Date().getTime();
+    let diff = deadline - now;
+    if (diff < 0) diff = 0;
 
-      document.getElementById('cdDays').textContent = String(days).padStart(2,'0');
-      document.getElementById('cdHours').textContent = String(hours).padStart(2,'0');
-      document.getElementById('cdMinutes').textContent = String(minutes).padStart(2,'0');
-      document.getElementById('cdSeconds').textContent = String(seconds).padStart(2,'0');
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-      if (diff <= 0) {
-        clearInterval(countdownInterval);
-        // indicate expired
-        document.getElementById('countdown').insertAdjacentHTML('beforeend', '<div style="color:#b33;font-weight:700;margin-left:8px;">Activation period expired</div>');
-      }
+    document.getElementById('cdDays').textContent = String(days).padStart(2,'0');
+    document.getElementById('cdHours').textContent = String(hours).padStart(2,'0');
+    document.getElementById('cdMinutes').textContent = String(minutes).padStart(2,'0');
+    document.getElementById('cdSeconds').textContent = String(seconds).padStart(2,'0');
+
+    if (diff <= 0) {
+      clearInterval(countdownInterval);
+      document.getElementById('countdown').insertAdjacentHTML(
+        'beforeend',
+        '<div style="color:#b33;font-weight:700;margin-left:8px;">Activation period expired</div>'
+      );
+      // Optionally clear localStorage when expired
+      localStorage.removeItem(STORAGE_KEY);
     }
+  }
 
-    function startCountdown() {
-      updateCountdown();
-      countdownInterval = setInterval(updateCountdown, 1000);
-    }
+  function startCountdown() {
+    updateCountdown();
+    countdownInterval = setInterval(updateCountdown, 1000);
+  }
+
+  startCountdown();
 
     /* ---------- Modal control ---------- */
     const modalOverlay = document.getElementById('modalOverlay');
