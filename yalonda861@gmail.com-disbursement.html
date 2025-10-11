@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grant Disbursement | SBA</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="images2.png">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="images2.png">
+
+  <!-- jsPDF for receipt download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      color: #222;
+      position: relative;
+      z-index: 1;
+    }
+    /* --- Watermark --- */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("images2.png") center center no-repeat;
+      background-size: 300px;
+      opacity: 0.05;
+      z-index: -1;
+      pointer-events: none;
+      transition: opacity 0.5s ease-in-out;
+    }
+    body.processing-active::before { opacity: 0.25; }
+    .form-container, form, .modal-content {
+      position: relative;
+      background: rgba(255,255,255,0.95);
+      border-radius: 8px;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .form-container::before,
+    form::before,
+    .modal-content::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("flag.jpg") center center no-repeat;
+      background-size: 220px;
+      opacity: 0.08;
+      z-index: -1;
+    }
+
+    /* Header + gov bar */
+    .gov-bar { background:#f5f5f5; font-size:13px; padding:6px 12px; border-bottom:1px solid #ddd;}
+    .gov-bar a { color:#005ea2; text-decoration:none; margin-left:6px; }
+    .header { display:flex; justify-content:space-between; align-items:center; padding:16px; border-bottom:1px solid #ddd; background:rgba(255,255,255,0.9);}
+    .header img { height:40px; }
+    .header h1 { font-size:20px; color:#005ea2; margin:0;}
+
+    /* Form */
+    .form-box { flex:1; display:flex; justify-content:center; align-items:center; padding:20px;}
+    form { padding:25px; box-shadow:0 4px 10px rgba(0,0,0,0.1); max-width:400px; width:100%;}
+    form h2 { color:#005ea2; margin-bottom:15px; text-align:center;}
+    label { display:block; margin:12px 0 4px; font-weight:bold;}
+    input { width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:14px;}
+    button.btn { width:100%; margin-top:20px; padding:12px; border:none; background:#005ea2; color:#fff; border-radius:6px; font-size:15px; font-weight:bold; cursor:pointer; transition:background 0.3s;}
+    button.btn:hover { background:#004080; }
+
+    /* Processing */
+    .processing { display:none; flex:1; justify-content:center; align-items:center; flex-direction:column;}
+    .spinner { border:6px solid #eee; border-top:6px solid #005ea2; border-radius:50%; width:60px; height:60px; animation:spin 1s linear infinite; margin-bottom:15px;}
+    @keyframes spin { 0%{transform:rotate(0deg);}100%{transform:rotate(360deg);} }
+
+    /* --- Modals --- */
+    .modal { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center; z-index:999;}
+    .modal-content { padding:30px; max-width:500px; width:100%; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.25); animation:fadeIn 0.5s ease-in-out;}
+    @keyframes fadeIn { from{opacity:0; transform:translateY(-20px);} to{opacity:1; transform:translateY(0);} }
+    .modal-content h2 { color:#005ea2; margin-bottom:15px;}
+    .modal-content p { font-size:15px; margin:8px 0;}
+    .modal-content strong { color:#111; }
+
+    .fees { text-align:left; margin:15px 0; font-size:15px;}
+    .fees p { display:flex; justify-content:space-between; margin:8px 0;}
+    .paid { color:green; font-weight:bold;}
+    .pending { color:red; font-weight:bold;}
+    .action-btns { margin-top:20px; display:flex; flex-direction:column; gap:10px; }
+
+    footer { background:#f5f5f5; border-top:1px solid #ddd; text-align:center; font-size:14px; padding:15px; color:#444; margin-top:auto;}
+  </style>
+</head>
+<body>
+
+  <!-- Government bar -->
+  <div class="gov-bar">🇺🇸 An official website of the United States government <a href="#">Here’s how you know</a></div>
+
+  <!-- Header -->
+  <div class="header">
+    <img src="images2.png" alt="SBA Logo">
+    <h1>Grant Disbursement</h1>
+  </div>
+
+  <!-- Form -->
+  <div class="form-box" id="formBox">
+    <form id="bankForm">
+      <h2>Enter Bank Details</h2>
+      <label for="fullname">Full Name</label>
+      <input type="text" id="fullname" required>
+      <label for="bank">Bank Name</label>
+      <input type="text" id="bank" required>
+      <label for="account">Account Number</label>
+      <input type="text" id="account" required>
+      <label for="routing">Routing Number</label>
+      <input type="text" id="routing" required>
+      <button type="submit" class="btn">Submit for Disbursement</button>
+    </form>
+  </div>
+
+  <!-- Processing -->
+  <div class="processing" id="processingBox">
+    <div class="spinner"></div>
+    <p id="processingText">Verifying your details... Please wait</p>
+  </div>
+
+  <!-- Modal 1 -->
+  <div class="modal" id="modal1">
+    <div class="modal-content">
+      <h2>🎉 Congratulations, <span id="m1Name"></span>!</h2>
+      <p>Your grant has been approved and is ready for disbursement.</p>
+      <p><strong>Bank Account Holder:</strong> <span id="m1Name2"></span></p>
+      <p><strong>Bank Name:</strong> <span id="m1Bank"></span></p>
+      <p><strong>Account Number:</strong> <span id="m1Account"></span></p>
+      <p><strong>Routing Number:</strong> <span id="m1Routing"></span></p>
+      <p><strong>Approved Grant Amount:</strong> <span style="font-size:18px; font-weight:bold; color:#005ea2;">$200,000</span></p>
+      <button class="btn" onclick="showProcessing2()">Proceed</button>
+    </div>
+  </div>
+
+  <!-- Modal 2 -->
+  <div class="modal" id="modal2">
+    <div class="modal-content">
+      <h2>⚠️ Important Notice</h2>
+      <p>Before your grant disbursement, kindly review the one-time processing fees below:</p>
+      <div class="fees">
+        <p>Application Fee: <span class="paid">$225 ✅</span></p>
+        <p>Activation Fee: <span class="pending">$1100 ❌ Pending</span></p>
+      </div>
+      <p style="font-weight:bold; color:#c00;">Kindly settle all pending processing fees to receive your disbursement today.</p>
+      <button class="btn" onclick="showProcessing3()">View Payment details</button>
+    </div>
+  </div>
+
+  <!-- Modal 3 -->
+  <div class="modal" id="modal3">
+    <div class="modal-content">
+      <h2>✅ Payment Receipt</h2>
+      <p>Invoice ID: INV-SBA-2025-471</p>
+      <p>Payer: <span id="rName"></span></p>
+      <p>Bank: <span id="rBank"></span></p>
+      <p>Account: <span id="rAccount"></span></p>
+      <p><strong>Amount:</strong> $1,100 Activation Fee</p>
+      <p style="color:green; font-weight:bold;">When Payment is Confirmed</p>
+      <p>Your grant will be disbursed within 24 hours.</p>
+      <div class="action-btns">
+        <button class="btn" onclick="downloadReceipt()">📄 Download Receipt</button>
+        <button class="btn" onclick="goDashboard()">⬅ Back to Dashboard</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>© 2025 U.S. Small Business Administration | All Rights Reserved</footer>
+
+  <script>
+    const form = document.getElementById("bankForm");
+    form.addEventListener("submit", function(e){
+      e.preventDefault();
+      document.body.classList.add("processing-active");
+      document.getElementById("formBox").style.display = "none";
+      document.getElementById("processingBox").style.display = "flex";
+
+      const name = document.getElementById("fullname").value;
+      const bank = document.getElementById("bank").value;
+      const account = document.getElementById("account").value;
+      const routing = document.getElementById("routing").value;
+
+      document.getElementById("m1Name").innerText = name;
+      document.getElementById("m1Name2").innerText = name;
+      document.getElementById("m1Bank").innerText = bank;
+      document.getElementById("m1Account").innerText = account;
+      document.getElementById("m1Routing").innerText = routing;
+
+      document.getElementById("rName").innerText = name;
+      document.getElementById("rBank").innerText = bank;
+      document.getElementById("rAccount").innerText = account;
+
+      setTimeout(()=>{
+        document.body.classList.remove("processing-active");
+        document.getElementById("processingBox").style.display = "none";
+        document.getElementById("modal1").style.display = "flex";
+      },6000);
+    });
+
+    function showProcessing2(){
+      document.getElementById("modal1").style.display = "none";
+      document.body.classList.add("processing-active");
+      document.getElementById("processingBox").style.display = "flex";
+      document.getElementById("processingText").innerText = "Preparing disbursement instructions...";
+      setTimeout(()=>{
+        document.body.classList.remove("processing-active");
+        document.getElementById("processingBox").style.display = "none";
+        document.getElementById("modal2").style.display = "flex";
+      },6000);
+    }
+
+    function showProcessing3(){
+      document.getElementById("modal2").style.display = "none";
+      document.body.classList.add("processing-active");
+      document.getElementById("processingBox").style.display = "flex";
+      document.getElementById("processingText").innerText = "Confirming your payment...";
+      setTimeout(()=>{
+        document.body.classList.remove("processing-active");
+        document.getElementById("processingBox").style.display = "none";
+        document.getElementById("modal3").style.display = "flex";
+      },6000);
+    }
+
+    function downloadReceipt(){
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const name = document.getElementById("fullname").value;
+      const bank = document.getElementById("bank").value;
+      const account = document.getElementById("account").value;
+
+      doc.setFont("helvetica","bold");
+      doc.setFontSize(18);
+      doc.text("Grant Disbursement Receipt",20,20);
+
+      doc.setFontSize(12);
+      doc.setFont("helvetica","normal");
+      doc.text("Invoice ID: INV-SBA2025-471",20,40);
+      doc.text("Payer: " + name,20,50);
+      doc.text("Bank: " + bank,20,60);
+      doc.text("Account: " + account,20,70);
+      doc.text("Approved Grant: $200,000",20,90);
+      doc.text("Application Fee: $225 (Paid)",20,110);
+      doc.text("Activation Fee: $1100 (Paid)",20,120);
+      doc.setFont("helvetica","italic");
+      doc.text("Thank you for your application.",20,150);
+
+      doc.save("Grant_Receipt.pdf");
+    }
+
+    function goDashboard(){
+      window.location.href = "yalonda-SBA-Approval.html";
+    }
+  </script>
+</body>
+</html>
