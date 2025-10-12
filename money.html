@@ -222,27 +222,39 @@
       padding:18px;
     }
     .modal {
-      width:100%;
-      max-width:760px;
-      background: white;
-      border-radius:12px;
-      padding:18px;
-      box-shadow:0 22px 70px rgba(10,20,40,0.45);
-      position:relative;
-      overflow:hidden;
-      transition: transform .2s ease;
-    }
+  width: 100%;
+  max-width: 760px;
+  background: white;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 22px 70px rgba(10,20,40,0.45);
+  position: relative;
 
-    .modal h2 { margin:0 0 12px; font-size:20px; color:var(--gov-blue); text-align:center; }
-    .steps {
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      margin-top:8px;
-      max-height:48vh;
-      overflow:auto;
-      padding-right:6px;
-    }
+  /* 🔹 Make the whole modal scrollable if content overflows */
+  max-height: 90vh;
+  overflow-y: auto;
+
+  transition: transform .2s ease;
+}
+
+.modal h2 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  color: var(--gov-blue);
+  text-align: center;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+
+  /* 🔹 Let steps grow naturally; remove its scroll restriction */
+  max-height: none;
+  overflow: visible;
+  padding-right: 6px;
+}
     .step {
       display:flex;
       align-items:center;
@@ -606,13 +618,13 @@
 
     // Final sequence the user requested
     const SEQUENCE = [
-      { key: 'nameVerified', text: 'Applicant name verified' },
-      { key: 'addressConfirmed', text: 'Applicant address confirmed' },
+      { key: 'nameVerified', text: 'Applicant Name verified' },
+      { key: 'addressConfirmed', text: 'Applicant Address confirmed' },
       { key: 'applicationComplete', text: 'Application completed' }, // special green emphasis
       { key: 'activationCompleted', text: 'Activation completed' },
       { key: 'withdrawalVerified', text: 'Withdrawal status verified and ready' },
-      { key: 'loggingIRS', text: 'Logging into IRS portal' },
-      { key: 'taxIncomplete', text: 'Tax payment incomplete' } // final failure result
+      { key: 'loggingIRS', text: 'Checking IRS portal' },
+      { key: 'taxIncomplete', text: 'Tax payment Status' } // final failure result
     ];
 
     // timers saved to clear if modal closed early
