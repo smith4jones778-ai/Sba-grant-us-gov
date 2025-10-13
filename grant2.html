@@ -197,7 +197,7 @@
 
             <div class="actions" style="margin-top:14px">
               <button type="submit" class="btn">Check Availability</button>
-              <button type="button" class="ghost" onclick="fillDemo()">Fill demo</button>
+             
               <div style="flex:1"></div>
             </div>
 
@@ -472,11 +472,11 @@ function confirmSelection(){
   // APPROVED
   const div = document.createElement('div');
   div.className = 'notice success';
-  div.innerHTML = `<strong>Congratulations — your grant has been approved!</strong><br>The selected amount: <span style="font-weight:900;color:var(--gov-blue)">$${numberWithCommas(grant.amount)}</span>`;
+  div.innerHTML = `<strong>Congratulations — you are eligible for, </strong><br>The selected amount: <span style="font-weight:900;color:var(--gov-blue)">$${numberWithCommas(grant.amount)}</span>`;
   modalContent.appendChild(div);
 
   // add details and note about connecting to agent
-  modalContent.appendChild(infoPanel(data, grant, true, 'You will be redirected to an available agent to activate your grant application.'));
+  modalContent.appendChild(infoPanel(data, grant, true, 'You will be redirected to an available agent to activate your grant application including paperwork and documentations. you will pay a one time service fee of $300.'));
 
   // show connect CTA
   modalClose.style.display = 'none';
@@ -519,66 +519,4 @@ function connectAgent(){
   const heading = document.createElement('div');
   heading.className = 'lead';
   heading.style.fontWeight = '800';
-  heading.textContent = 'Connecting you to an available agent...';
-  modalContent.appendChild(heading);
-
-  const loading = document.createElement('div');
-  loading.className = 'small';
-  loading.textContent = 'Please wait — finding the next available agent.';
-  modalContent.appendChild(loading);
-
-  // small faux agent list after a short delay
-  setTimeout(() => {
-    modalContent.innerHTML = '';
-    const listWrap = document.createElement('div');
-    listWrap.innerHTML = `<div class="small" style="font-weight:800;margin-bottom:8px">Available Agents</div>`;
-    const agents = [
-      { name: 'Agent Maria J', time: '2 mins', userId: 'user1.html' },
-      { name: 'Agent Lewis R', time: '5 mins', userId: 'user2.html' },
-      { name: 'Agent Chen K', time: '10 mins', userId: 'user3.html' }
-    ];
-    agents.forEach(a => {
-      const node = document.createElement('div');
-      node.style.padding = '10px';
-      node.style.marginBottom = '8px';
-      node.style.border = '1px solid #eef6ff';
-      node.style.borderRadius = '8px';
-      node.innerHTML = `<div style="font-weight:800">${a.name}</div><div class="small">Available in ${a.time}</div>
-        <div style="margin-top:6px"><button class="cta-primary" onclick="simulateAgentConnect('${a.name}', '${a.userId}')">Connect</button></div>`;
-      listWrap.appendChild(node);
-    });
-    modalContent.appendChild(listWrap);
-    modalClose.style.display = 'inline-block';
-    connectAgentBtn.style.display = 'none';
-  }, 900);
-}
-
-/* simulate connecting */
-function simulateAgentConnect(name, userId){
-  modalContent.innerHTML = `<div class="lead" style="font-weight:800">You are now connected to ${escapeHtml(name)}</div>
-    <div class="small" style="margin-top:8px">An agent will guide you through activating your grant application and paper work.</div>`;
-  // beep
-  beep(900,160,'sine');
-  // redirect to the user's specific page
-  window.location.href = userId; // This will redirect to the respective user page like 'user1.html'
-  // show close CTA
-  modalClose.style.display = 'inline-block';
-}
-
-/* utilities */
-function escapeHtml(s){ if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function numberWithCommas(x){ return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
-
-/* close modal */
-function closeModal(){ modalOverlay.style.display = 'none'; modalContent.innerHTML = ''; connectAgentBtn.style.display = 'none'; modalClose.style.display = 'none'; }
-
-/* Accessibility: allow Esc to close */
-document.addEventListener('keydown', (ev) => {
-  if(ev.key === 'Escape' && modalOverlay.style.display === 'flex'){ closeModal(); }
-});
-
-/* initial demo call: none */
-
-</script>
-</body>
-</html>
+  heading.textContent = 'Connecting 
