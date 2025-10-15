@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SBA Grant Eligibility — Official Information</title>
+
+  <style>
+    /* ====== GLOBAL RESET ====== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* ====== BODY ====== */
+    body {
+      font-family: "Poppins", sans-serif;
+      color: #fff;
+      background: linear-gradient(to bottom right, rgba(0, 40, 80, 0.9), rgba(0, 100, 200, 0.8)),
+                  url('https://sba-grant-us-gov.vercel.app/flag.jpg') no-repeat center center/cover;
+      background-attachment: fixed;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* ====== HEADER ====== */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 40px;
+      background: rgba(0, 0, 50, 0.65);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    header img {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      color: #ffdf00;
+      text-align: center;
+      flex: 1;
+      margin-left: 15px;
+      text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
+    }
+
+    /* ====== MAIN CONTENT ====== */
+    .container {
+      text-align: center;
+      padding: 70px 25px;
+      max-width: 900px;
+      width: 90%;
+      margin: 50px auto;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(20px);
+      line-height: 1.8;
+    }
+
+    .container h2 {
+      font-size: 2rem;
+      color: #ffdf00;
+      animation: glow 2s infinite alternate;
+      margin-bottom: 15px;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 8px #fff, 0 0 12px #ffdf00; }
+      to { text-shadow: 0 0 20px #ffdf00, 0 0 40px #ffdf00; }
+    }
+
+    .container p {
+      font-size: 1.1rem;
+      color: #e9f3ff;
+      margin-top: 15px;
+    }
+
+    /* ====== BUTTON ====== */
+    .btn {
+      display: inline-block;
+      margin-top: 35px;
+      padding: 14px 38px;
+      background: linear-gradient(45deg, #ffdf00, #ff8c00);
+      color: #002850;
+      font-weight: 600;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+    }
+
+    .btn:hover {
+      background: linear-gradient(45deg, #ffd000, #ff6600);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(255, 200, 0, 0.6);
+    }
+
+    /* ====== FOOTER ====== */
+    footer {
+      padding: 20px;
+      text-align: center;
+      background: rgba(0, 0, 50, 0.65);
+      font-size: 0.9rem;
+      color: #e0e0e0;
+      margin-top: auto;
+    }
+
+    footer span {
+      color: #ffdf00;
+    }
+
+    /* ====== RESPONSIVE DESIGN ====== */
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        padding: 15px 20px;
+        text-align: center;
+      }
+
+      header img {
+        width: 70px;
+        height: 70px;
+        margin-bottom: 10px;
+      }
+
+      header h1 {
+        font-size: 1.3rem;
+        margin-left: 0;
+      }
+
+      .container {
+        padding: 50px 20px;
+        width: 95%;
+        margin: 30px auto;
+      }
+
+      .container h2 {
+        font-size: 1.6rem;
+      }
+
+      .container p {
+        font-size: 1rem;
+      }
+
+      .btn {
+        width: 90%;
+        padding: 15px;
+        font-size: 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container h2 {
+        font-size: 1.4rem;
+      }
+
+      header h1 {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZ5tmjMQSZPldNVfOzaJqDOS_wakNXdw0joA&s" alt="SBA Logo">
+    <h1>Official SBA Grant Information Portal</h1>
+  </header>
+
+  <main class="container">
+    <h2>🎉 October – December SBA Grant Update</h2>
+    <p>
+      Hello and welcome! We’re thrilled to share that <b>funding is now open</b> for the upcoming 
+      <strong>Small Business Administration (SBA) Grant Program</strong> — covering 
+      <b>October through December</b>.
+    </p>
+    <p>
+      This is your chance to secure <b>free government funding</b> designed to uplift small business 
+      owners across eligible U.S. states. The best part? 💸 You do <b>not have to pay it back!</b> 
+      It’s genuine assistance to help you grow, innovate, and sustain your business dream.
+    </p>
+    <p>
+      If your state qualifies, your business could be eligible immediately. Click below to 
+      <b>check your eligibility</b> and begin your SBA grant process today.
+    </p>
+
+    <a href="https://sba-grant-us-gov.vercel.app/grant-eligibility.html" class="btn" target="_blank">
+      🔍 Check My Eligibility Now
+    </a>
+  </main>
+
+  <footer>
+    <p>© 2025 <span>U.S. SBA Grant Information Office</span> — All Rights Reserved.</p>
+  </footer>
+</body>
+</html>
