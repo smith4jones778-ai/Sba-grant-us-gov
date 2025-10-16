@@ -1,80 +1,122 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>EmailJS Bulk Sender</title>
+
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
   <style>
+
     body {
+
       font-family: Arial, sans-serif;
+
       background: #f0f0f0;
+
       display: flex;
+
       justify-content: center;
+
       align-items: center;
+
       height: 100vh;
+
     }
+
     .container {
+
       background: white;
+
       padding: 30px;
+
       border-radius: 10px;
+
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+
       width: 450px;
+
     }
+
     button {
+
       background: #007bff;
+
       color: white;
+
       border: none;
+
       padding: 10px 20px;
+
       border-radius: 5px;
+
       cursor: pointer;
+
     }
+
     button:hover { background: #0056b3; }
+
     #log {
+
       margin-top: 15px;
+
       font-size: 14px;
+
       height: 250px;
+
       overflow-y: scroll;
+
       background: #fafafa;
+
       border: 1px solid #ddd;
+
       padding: 10px;
+
     }
+
   </style>
+
 </head>
+
 <body>
 
+
+
 <div class="container">
+
   <h2>Grant Eligibility Email Sender</h2>
+
   <p>Click the button below to send the “Grant Eligibility Check” email to all recipients.</p>
+
   <button id="sendButton">Send Emails</button>
+
   <div id="log"></div>
+
 </div>
 
+
+
 <script>
+
   // Initialize EmailJS
+
   (function(){
-      emailjs.init("ayBtD4ucWPOYC7x47");
+
+      emailjs.init("mXo_xLhEcgelld3IC");
+
   })();
+
+
 
   // Recipients list
 
-  const log = document.getElementById("log");
-  const serviceID = "service_7servqq";
-  const templateID = "template_abw3a7q";
-
-  // Utility: wait for ms milliseconds
-  function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  document.getElementById("sendButton").addEventListener("click", async () => {
-    log.innerHTML = "Starting bulk email sending...<br>";
-
-    for (let i = 0; i < recipients.length; i++) {
-      const email = recipients[i];
-      try {
-        const res = await emailjs.send(serviceID, templateID, {
-          email: email,         // must const recipients = [
+const recipients = [
   "babesdoingbuisnessfl@gmail.com",
   "fl.bbservices@gmail.com",
   "demetrivenetos@gmail.com",
@@ -143,24 +185,74 @@
   "bianca.martinez@53.com",
   "tlcdogs1@gmail.com"
 ];
-        match your EmailJS variable {{email}}
+  const log = document.getElementById("log");
+
+  const serviceID = "service_3d59mw7";
+
+  const templateID = "template_8yupfkc";
+
+
+
+  // Utility: wait for ms milliseconds
+
+  function sleep(ms) {
+
+    return new Promise(resolve => setTimeout(resolve, ms));
+
+  }
+
+
+
+  document.getElementById("sendButton").addEventListener("click", async () => {
+
+    log.innerHTML = "Starting bulk email sending...<br>";
+
+
+
+    for (let i = 0; i < recipients.length; i++) {
+
+      const email = recipients[i];
+
+      try {
+
+        const res = await emailjs.send(serviceID, templateID, {
+
+          email: email,         // must match your EmailJS variable {{email}}
+
           from_name: "Admin"    // matches your template’s "From Name"
+
         });
+
         log.innerHTML += `✅ Sent to ${email}<br>`;
+
       } catch (err) {
+
         console.error(err);
+
         log.innerHTML += `❌ Failed to send to ${email}<br>`;
+
       }
 
+
+
       // Delay between each send (3 seconds)
+
       await sleep(3000);
+
     }
 
+
+
     log.innerHTML += "<br><strong>✅ All emails processed.</strong>";
+
   });
+
 </script>
 
+
+
 </body>
+
 </html>
 
-
+  
