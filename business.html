@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>USA Business Support Services — Websites, SEO, Funding & Legal</title>
+  <meta name="description" content="Professional US-based services for entrepreneurs: websites, SEO, funding, legal, bookkeeping, and growth marketing. Subscribe to get a tailored plan.">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg: #f6f9fb;
+      --card: #ffffff;
+      --accent: #0b6fb1;        /* primary blue */
+      --accent-2:#d4af37;       /* subtle gold accent */
+      --muted:#64748b;
+      --text:#0f1724;
+      --glass: rgba(255,255,255,0.7);
+      --radius:14px;
+      --container:1150px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto, 'Helvetica Neue', Arial;color:var(--text);background:linear-gradient(180deg,#f6f9fb 0%, #f1f6fa 100%);-webkit-font-smoothing:antialiased}
+    a{color:inherit;text-decoration:none}
+
+    /* layout */
+    .site {max-width:var(--container);margin:32px auto;padding:20px}
+    header {display:flex;align-items:center;justify-content:space-between;padding:18px;background:transparent}
+    .brand {display:flex;align-items:center;gap:12px}
+    .logo {width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#0a94cf);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;box-shadow:0 6px 20px rgba(11,111,177,0.14)}
+    .brand h1{font-size:18px;margin:0}
+    nav {display:flex;gap:12px;align-items:center}
+    nav a{font-weight:600;color:var(--muted);padding:10px;border-radius:10px}
+    nav a.cta{background:linear-gradient(90deg,var(--accent),#0a94cf);color:#fff}
+
+    /* hero */
+    .hero {display:grid;grid-template-columns:1fr 420px;gap:28px;margin-top:18px;align-items:center}
+    @media (max-width:980px){.hero{grid-template-columns:1fr;}}
+    .hero-card{background:linear-gradient(180deg,rgba(255,255,255,0.9),rgba(255,255,255,0.85));border-radius:18px;padding:28px;box-shadow:0 12px 40px rgba(18,38,63,0.06)}
+    .hero h2{font-size:28px;margin:0 0 8px;line-height:1.05}
+    .hero p.lead{color:var(--muted);margin:0 0 18px}
+    .kpis {display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
+    .kpi {background:#fff;padding:10px 12px;border-radius:10px;border:1px solid #eef2f6;min-width:110px;text-align:center}
+    .kpi strong{display:block;font-size:18px;color:var(--accent)}
+
+    /* services grid */
+    .services{margin-top:26px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    @media (max-width:980px){.services{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:640px){.services{grid-template-columns:1fr}}
+    .svc{background:var(--card);padding:16px;border-radius:12px;border:1px solid #eef2f6;transition:transform .18s,box-shadow .18s}
+    .svc:hover{transform:translateY(-6px);box-shadow:0 14px 30px rgba(11,111,177,0.06)}
+    .svc h3{margin:0 0 8px;font-size:16px}
+    .svc p{margin:0;color:var(--muted);font-size:14px}
+
+    /* highlight service */
+    .feature {display:flex;gap:18px;align-items:center;padding:18px;border-radius:12px;background:linear-gradient(90deg,rgba(11,111,177,0.05),rgba(212,175,55,0.03));border:1px solid rgba(11,111,177,0.06);margin-top:18px}
+    .feature .left{flex:1}
+    .feature h3{margin:0 0 8px}
+    .feature p{color:var(--muted)}
+
+    /* process / testimonials */
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}
+    @media (max-width:980px){.grid-2{grid-template-columns:1fr}}
+
+    .card{background:var(--card);padding:18px;border-radius:12px;border:1px solid #eef2f6}
+    .muted{color:var(--muted);font-size:14px}
+
+    /* subscribe form */
+    .subscribe {position:relative}
+    form {display:flex;flex-direction:column;gap:12px}
+    label{font-size:13px;color:var(--muted);font-weight:600}
+    input,textarea,select{padding:12px;border-radius:10px;border:1px solid #e6edf5;background:#fff;outline:none;font-size:14px}
+    input:focus,textarea:focus,select:focus{box-shadow:0 6px 18px rgba(11,111,177,0.08);border-color:var(--accent)}
+    .btn {display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(90deg,var(--accent),#0a94cf);color:#fff;border:0;padding:12px;border-radius:10px;font-weight:700;cursor:pointer}
+    .small{font-size:13px;color:var(--muted)}
+
+    /* testimonials */
+    .test {display:flex;gap:12px;align-items:flex-start}
+    .avatar{width:56px;height:56px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:800;border:1px solid #eef2f6}
+
+    footer{margin-top:36px;padding:24px 0;text-align:center;color:var(--muted);font-size:14px}
+
+    /* responsive padding */
+    @media (max-width:480px){
+      .site{padding:14px}
+      .logo{width:44px;height:44px}
+    }
+  </style>
+</head>
+<body>
+  <div class="site">
+    <header>
+      <div class="brand">
+        <div class="logo">BS</div>
+        <div>
+          <h1>Business Services Marketplace</h1>
+          <div class="small muted">Trusted US-based professionals for business growth</div>
+        </div>
+      </div>
+
+      <nav>
+        <a href="#services">Services</a>
+        <a href="#process">How it Works</a>
+        <a href="#contact" class="cta">Get Started</a>
+      </nav>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-card">
+        <h2>We build websites, grow traffic, get funding and handle the paperwork — so you can scale with confidence.</h2>
+        <p class="lead">We combine expert web design, strategic SEO, funding & legal support and tailored business operations to deliver measurable growth for US entrepreneurs. Every plan is practical, compliant, and ROI-focused.</p>
+
+        <div class="kpis">
+          <div class="kpi"><strong>+10x</strong><div class="small">Traffic Growth (avg.)</div></div>
+          <div class="kpi"><strong>$0 → $1M+</strong><div class="small">Clients funded</div></div>
+          <div class="kpi"><strong>99%</strong><div class="small">Client satisfaction</div></div>
+        </div>
+
+        <div class="feature" style="margin-top:20px">
+          <div class="left">
+            <h3>Premium Website & SEO — Designed to convert</h3>
+            <p class="muted">We design fast, accessible websites optimized for conversions and search. Our SEO programs focus on sustainable traffic — technical SEO, content strategy and conversion optimization that turn visitors into customers.</p>
+          </div>
+          <div style="width:220px;text-align:right">
+            <div style="background:linear-gradient(90deg,var(--accent),var(--accent-2));padding:10px;border-radius:10px;color:white;font-weight:700">Digital Growth Plan</div>
+            <div class="small muted" style="margin-top:8px">Start with audit & roadmap</div>
+          </div>
+        </div>
+
+        <div style="margin-top:22px" class="muted">We serve startups, small businesses and established operators across the United States — from idea stage to scaling enterprise.</div>
+      </div>
+
+      <!-- subscription / CTA -->
+      <aside class="card subscribe" id="contact">
+        <h3 style="margin:0 0 8px">Start your Project — Request a Proposal</h3>
+        <div class="small muted" style="margin-bottom:12px">Complete the form and our team will contact you within 24 business hours with a tailored proposal.</div>
+
+        <form id="subscribeForm" autocomplete="on" novalidate>
+          <div>
+            <label for="businessName">Business Name</label>
+            <input id="businessName" name="businessName" required placeholder="Acme LLC">
+          </div>
+
+          <div>
+            <label for="contactName">Full Name</label>
+            <input id="contactName" name="contactName" required placeholder="Jane Doe">
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" required placeholder="you@business.com">
+            </div>
+            <div>
+              <label for="phone">Phone</label>
+              <input id="phone" name="phone" type="tel" required placeholder="+1 555 555 5555">
+            </div>
+          </div>
+
+          <div>
+            <label for="address">Business Address</label>
+            <input id="address" name="address" placeholder="Street, City, State, ZIP" required>
+          </div>
+
+          <div>
+            <label for="ein">EIN / SSN (optional)</label>
+            <input id="ein" name="ein" placeholder="12-3456789 (optional)">
+          </div>
+
+          <div>
+            <label for="serviceType">Choose Service</label>
+            <select id="serviceType" name="serviceType" required>
+              <option value="">Select a service</option>
+              <option>Web Design & SEO — Full Growth Package</option>
+              <option>Website Design (Landing / Brochure)</option>
+              <option>Technical SEO & Content Strategy</option>
+              <option>Grant Application & Funding Support</option>
+              <option>Business Registration & Compliance</option>
+              <option>Bookkeeping & Tax Setup</option>
+              <option>Legal Document Prep (Contracts & Trademarks)</option>
+              <option>Automation & Custom Software</option>
+              <option>Marketing & Paid Ads</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="details">Project Brief (short)</label>
+            <textarea id="details" name="details" rows="3" placeholder="What outcome do you want? Timeline? Budget?"></textarea>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="tos" type="checkbox" required>
+            <label for="tos" class="small">I confirm I will pay for the chosen service upon agreement.</label>
+          </div>
+
+          <div style="display:flex;gap:8px">
+            <button type="submit" class="btn">Request Proposal</button>
+            <button type="button" id="clearBtn" style="background:#fff;border:1px solid #eef2f6;color:var(--accent);padding:10px;border-radius:10px;font-weight:700">Clear</button>
+          </div>
+
+          <div id="formMessage" style="display:none;margin-top:10px;padding:10px;border-radius:8px"></div>
+        </form>
+      </aside>
+    </section>
+
+    <!-- SERVICES section -->
+    <section id="services" class="card" style="margin-top:22px">
+      <h3 style="margin:0 0 12px">What we do — Services explained</h3>
+
+      <div class="services">
+        <div class="svc">
+          <h3>Web Design & Development</h3>
+          <p>Create fast, secure and conversion-focused websites. Responsive layouts, accessibility-first code, and easy CMS for content updates.</p>
+        </div>
+
+        <div class="svc">
+          <h3>SEO & Content Strategy</h3>
+          <p>Technical SEO, keyword & content roadmap, on-page optimization and link-building — built to drive sustainable organic traffic.</p>
+        </div>
+
+        <div class="svc">
+          <h3>Grant & Funding Support</h3>
+          <p>Grant research, professional proposal writing, and investor readiness to maximize your chances of funding and favorable terms.</p>
+        </div>
+
+        <div class="svc">
+          <h3>Legal & Compliance</h3>
+          <p>Document preparation, trademarks, NDAs and compliance advisory to protect and scale your business securely in the US market.</p>
+        </div>
+
+        <div class="svc">
+          <h3>Bookkeeping & Tax Setup</h3>
+          <p>Setup for clean accounting, payroll integration, and tax-ready records so you avoid penalties and stay investor-ready.</p>
+        </div>
+
+        <div class="svc">
+          <h3>Automation & Software</h3>
+          <p>Custom tools and automation (workflows, CRMs, integrations) to reduce manual work and increase operational efficiency.</p>
+        </div>
+
+        <div class="svc">
+          <h3>Paid Ads & Growth Marketing</h3>
+          <p>Performance marketing (Google, Meta), conversion funnels and creative testing to scale user acquisition and revenue.</p>
+        </div>
+
+        <div class="svc">
+          <h3>Business Registration</h3>
+          <p>LLC, S-Corp, EIN help — we make registering and staying compliant fast and straightforward with clear documentation.</p>
+        </div>
+
+        <div class="svc">
+          <h3>Concierge & Executive Support</h3>
+          <p>Event planning, travel management and executive services so you can focus on strategy while we handle logistics.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- process + testimonials -->
+    <div class="grid-2">
+      <div class="card" id="process">
+        <h3>How it Works</h3>
+        <ol class="muted" style="padding-left:18px">
+          <li><strong>Request a proposal:</strong> Submit your brief using the form above.</li>
+          <li><strong>Discovery call:</strong> We schedule a short call to clarify objectives & budget.</li>
+          <li><strong>Proposal & timeline:</strong> Receive a tailored proposal, milestones and pricing.</li>
+          <li><strong>Kickoff & delivery:</strong> Approve the proposal and we start — regular updates included.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>Client Results & Testimonials</h3>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+          <div class="test">
+            <div class="avatar">AP</div>
+            <div>
+              <strong>Amira P., Founder</strong>
+              <div class="muted">“Their website and SEO strategy tripled our leads in 90 days. Clear process and exceptional communication.”</div>
+            </div>
+          </div>
+
+          <div class="test">
+            <div class="avatar">JR</div>
+            <div>
+              <strong>John R., CEO</strong>
+              <div class="muted">“They handled our grant application end-to-end. Funded within 60 days — highly recommended.”</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      © <span id="year"></span> Business Services Marketplace • Serving businesses across the United States
+    </footer>
+  </div>
+
+  <!-- Firebase (v8 for simplicity) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    // Your Firebase config (as provided)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDz1suJpOPHC6N7cEZS0pBqVY-z7U4FEwU",
+      authDomain: "upload-34aa5.firebaseapp.com",
+      databaseURL: "https://upload-34aa5-default-rtdb.firebaseio.com",
+      projectId: "upload-34aa5",
+      storageBucket: "upload-34aa5.firebasestorage.app",
+      messagingSenderId: "680131375536",
+      appId: "1:680131375536:web:081ef6db97ffe9fe816675",
+      measurementId: "G-CGS8GJZQL3"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Populate current year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Simple form handling + client-side validation
+    const form = document.getElementById('subscribeForm');
+    const clearBtn = document.getElementById('clearBtn');
+    const messageBox = document.getElementById('formMessage');
+
+    function showMessage(text, ok=true){
+      messageBox.style.display = 'block';
+      messageBox.style.background = ok? 'linear-gradient(90deg,#ecf9f0,#e6fff2)' : '#fff4f4';
+      messageBox.style.color = ok? '#0b6f2b' : '#9b1c1c';
+      messageBox.style.border = ok? '1px solid rgba(11,111,177,0.06)' : '1px solid rgba(155,28,28,0.06)';
+      messageBox.textContent = text;
+      setTimeout(()=> { messageBox.style.display = 'none'; }, 6000);
+    }
+
+    form.addEventListener('submit', e=>{
+      e.preventDefault();
+
+      // gather values
+      const data = {
+        businessName: (document.getElementById('businessName').value || '').trim(),
+        contactName: (document.getElementById('contactName').value || '').trim(),
+        email: (document.getElementById('email').value || '').trim(),
+        phone: (document.getElementById('phone').value || '').trim(),
+        address: (document.getElementById('address').value || '').trim(),
+        ein: (document.getElementById('ein').value || '').trim(),
+        serviceType: (document.getElementById('serviceType').value || '').trim(),
+        details: (document.getElementById('details').value || '').trim(),
+        confirmedWillPay: !!document.getElementById('tos').checked,
+        createdAt: Date.now()
+      };
+
+      // minimal validation
+      if(!data.businessName || !data.contactName || !data.email || !data.phone || !data.address || !data.serviceType){
+        showMessage('Please complete all required fields.', false);
+        return;
+      }
+      if(!data.confirmedWillPay){
+        showMessage('Please confirm that you will pay for the chosen service.', false);
+        return;
+      }
+
+      // Save to firebase realtime database
+      const ref = db.ref('businessSubscriptions').push();
+      ref.set(data).then(()=> {
+        showMessage('Thank you — your request has been sent. Our team will contact you within 24 business hours.');
+        form.reset();
+      }).catch(err=>{
+        console.error(err);
+        showMessage('An error occurred while saving — please try again later.', false);
+      });
+    });
+
+    clearBtn.addEventListener('click', ()=>{ form.reset(); showMessage('Form cleared.', true); });
+
+  </script>
+</body>
+</html>
