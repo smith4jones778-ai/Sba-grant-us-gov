@@ -4,16 +4,22 @@
   <meta charset="UTF-8">
   <title>Admin Chat Dashboard | Agent</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <!-- EmailJS -->
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
   <style>
     body {font-family:Poppins,sans-serif;margin:0;display:flex;height:100vh;background:#f2f5f9;}
     aside {width:280px;background:#0078ff;color:white;padding:20px;display:flex;flex-direction:column;}
     h2 {margin-top:0;text-align:center;}
     #userList {flex:1;overflow-y:auto;margin-top:10px;}
-    .userItem {padding:10px;background:#0060cc;margin-bottom:8px;border-radius:6px;cursor:pointer;}
+    .userItem {padding:10px;background:#0060cc;margin-bottom:8px;border-radius:6px;cursor:pointer;position:relative;}
     .userItem:hover {background:#0050aa;}
+    .badge {position:absolute;top:8px;right:10px;background:#ff4d4f;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:700;}
     main {flex:1;display:flex;flex-direction:column;}
     header {background:#0078ff;color:white;padding:12px;text-align:center;font-weight:600;}
     .messages {flex:1;padding:15px;overflow-y:auto;background:#eef3f8;display:flex;flex-direction:column;}
@@ -73,6 +79,7 @@ const ADMIN_EMAIL = "smith4778@gmail.com";
 let currentChatId = "";
 let currentUserEmail = "";
 let currentUserName = "";
+let userUnread = {}; // Track unread counts per chat
 
 /* ================= LOAD USERS ================= */
 function loadUsers() {
@@ -98,6 +105,15 @@ function loadUsers() {
       div.textContent = `${data.username || 'Unknown'} (${data.email || 'no email'})`;
       div.onclick = () => openChat(data.key, data.username, data.email);
 
+      // Unread badge
+      if (userUnread[data.key] > 0) {
+        const badge = document.createElement("span");
+        badge.className = "badge";
+        badge.textContent = userUnread[data.key];
+        div.appendChild(badge);
+      }
+
+      // Delete button
       const delBtn = document.createElement("button");
       delBtn.textContent = "Delete";
       delBtn.className = "deleteBtn";
@@ -119,11 +135,37 @@ function loadUsers() {
 }
 loadUsers();
 
+/* ================= WATCH FOR NEW MESSAGES ================= */
+db.ref("chats").on("child_added", snap => {
+  const chat = snap.val();
+  if (chat && chat.username && chat.email) {
+    sendEmailToAdmin(chat.username, chat.email, `🆕 New chat started by ${chat.username} (${chat.email})`);
+  }
+});
+
+// Listen for new messages globally
+db.ref("chats").on("child_changed", snap => {
+  const chatId = snap.key;
+  db.ref(`chats/${chatId}/messages`).limitToLast(1).once("value", lastMsgSnap => {
+    lastMsgSnap.forEach(msgSnap => {
+      const msg = msgSnap.val();
+      if (msg.sender !== ADMIN_NAME && !msg.seen) {
+        userUnread[chatId] = (userUnread[chatId] || 0) + 1;
+        updateUserListBadge(chatId);
+        playNotify();
+        sendEmailToAdmin(msg.sender, chatId, `💬 New message from ${msg.sender}: ${msg.text}`);
+      }
+    });
+  });
+});
+
 /* ================= OPEN CHAT ================= */
 function openChat(chatId, userName, userEmail) {
   currentChatId = chatId;
   currentUserName = userName;
   currentUserEmail = userEmail;
+  userUnread[chatId] = 0;
+  updateUserListBadge(chatId);
 
   const messagesDiv = document.getElementById("messages");
   messagesDiv.innerHTML = `<div style="text-align:center;color:#555;margin-bottom:10px;">Chat with ${userName}</div>`;
@@ -138,7 +180,6 @@ function openChat(chatId, userName, userEmail) {
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
     if (msg.sender !== ADMIN_NAME) {
-      document.getElementById("notifySound").play().catch(()=>{});
       db.ref(`chats/${chatId}/messages/${snap.key}`).update({ seen: true });
     }
   });
@@ -173,7 +214,7 @@ function sendMessage() {
   });
 }
 
-/* ================= EMAIL TO USER ================= */
+/* ================= EMAIL HELPERS ================= */
 function sendEmailToUser(to, subject, fromName, messageText) {
   const params = {
     to_email: to,
@@ -187,7 +228,20 @@ function sendEmailToUser(to, subject, fromName, messageText) {
     .catch(err => console.error("❌ EmailJS error:", err));
 }
 
-/* ================= ESCAPE HTML ================= */
+function sendEmailToAdmin(fromName, fromEmail, text) {
+  const params = {
+    to_email: ADMIN_EMAIL,
+    from_name: fromName,
+    from_email: fromEmail,
+    subject: `New message from ${fromName}`,
+    message: text
+  };
+  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
+    .then(() => console.log("✅ Admin notified via EmailJS"))
+    .catch(err => console.error("❌ Admin EmailJS error:", err));
+}
+
+/* ================= UTILITIES ================= */
 function escapeHtml(unsafe) {
   if(!unsafe) return "";
   return String(unsafe)
@@ -197,6 +251,19 @@ function escapeHtml(unsafe) {
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;")
     .replaceAll("\n","<br>");
+}
+
+function playNotify() {
+  document.getElementById("notifySound").currentTime = 0;
+  document.getElementById("notifySound").play().catch(()=>{});
+}
+
+function updateUserListBadge(chatId) {
+  const items = document.querySelectorAll(".userItem");
+  items.forEach(div => {
+    if (div.textContent.includes(chatId)) return; // skip if not matched
+  });
+  loadUsers(); // simple refresh method for consistency
 }
 </script>
 </body>
