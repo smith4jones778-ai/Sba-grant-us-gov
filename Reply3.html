@@ -70,8 +70,13 @@ const db = firebase.database();
 
 const agent = "Agent Chen K";
 let currentChat = null;
-let unreadCounts = {}; // track unread messages per chat
+let unreadCounts = {};
 let totalUnread = 0;
+
+// Ask permission for browser notifications
+if (Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
 
 // Load chat list
 db.ref("chats").on("value", snap => {
@@ -94,7 +99,7 @@ db.ref("chats").on("value", snap => {
     if (currentChat === child.key) div.classList.add("active");
     chatList.appendChild(div);
 
-    // Listen for new messages for notification
+    // Listen for new messages
     listenForNewMessages(child.key, chat.username);
   });
 });
@@ -106,6 +111,7 @@ function listenForNewMessages(chatId, username) {
     if (msg.sender !== agent) {
       if (currentChat !== chatId) {
         playNotificationSound();
+        showBrowserNotification(username, msg.text);
         incrementBadge(chatId);
       }
     }
@@ -116,6 +122,16 @@ function playNotificationSound() {
   const sound = document.getElementById("notificationSound");
   sound.currentTime = 0;
   sound.play();
+}
+
+function showBrowserNotification(username, text) {
+  if (Notification.permission === "granted") {
+    const notification = new Notification(`New message from ${username}`, {
+      body: text,
+      icon: "https://cdn-icons-png.flaticon.com/512/190/190411.png"
+    });
+    notification.onclick = () => window.focus();
+  }
 }
 
 function incrementBadge(chatId) {
@@ -183,4 +199,4 @@ function sendReply() {
 }
 </script>
 </body>
-  </html>
+</html>
