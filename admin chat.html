@@ -436,7 +436,7 @@ deleteChatBtn.addEventListener('click', function(){
    EMAIL FUNCTIONS (EmailJS)
    Template expects variables: to_email, from_name, from_email, message
    --------------------------- */
-function sendEmailToUser(to, subject, fromName, messageText){
+function sendEmailToUser(to, subject, fromName, messageText) {
   const params = {
     to_email: to,
     from_name: fromName || ADMIN_NAME,
@@ -444,15 +444,13 @@ function sendEmailToUser(to, subject, fromName, messageText){
     subject: subject,
     message: messageText
   };
-  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
-    .then(() => console.log('Email sent to user:', to))
-    .catch(err => console.error('EmailJS error:', err));
+
+  emailjs.send("service_au8aho1", "template_7gfx3ty", params)
+    .then(() => console.log("✅ Email sent to user:", to))
+    .catch(err => console.error("❌ EmailJS error:", err));
 }
 
-/* send admin notification when a user message arrives
-   (we call this when loading messages in openChat)
-*/
-function sendEmailToAdmin(fromName, fromEmail, text){
+function sendEmailToAdmin(fromName, fromEmail, text) {
   const params = {
     to_email: ADMIN_EMAIL,
     from_name: fromName,
@@ -460,9 +458,10 @@ function sendEmailToAdmin(fromName, fromEmail, text){
     subject: `New message from ${fromName}`,
     message: `New message from ${fromName} (${fromEmail}):\n\n${text}`
   };
-  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
-    .then(()=> console.log('Notified admin by email'))
-    .catch(err => console.error('EmailJS admin notify error', err));
+
+  emailjs.send("service_au8aho1", "template_7gfx3ty", params)
+    .then(() => console.log("✅ Notified admin by email"))
+    .catch(err => console.error("❌ EmailJS admin notify error:", err));
 }
 
 /* ---------------------------
