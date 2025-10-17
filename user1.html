@@ -2,168 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Live Chat | Grant Application</title>
+  <title>Live Chat | Grant Support</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
   <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #f2f5f7;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      margin: 0;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .chat-box {
-      width: 100%;
-      max-width: 600px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 6px 25px rgba(0,0,0,0.1);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      height: 80vh;
-    }
-
-    .header {
-      background: #0078ff;
-      color: white;
-      padding: 14px;
-      text-align: center;
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .messages {
-      flex: 1;
-      padding: 15px;
-      overflow-y: auto;
-      background: #f7f9fb;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .msg {
-      margin: 6px 0;
-      padding: 10px 14px;
-      border-radius: 16px;
-      max-width: 80%;
-      font-size: 15px;
-      word-wrap: break-word;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-    }
-
-    .sent {
-      background: #0078ff;
-      color: white;
-      align-self: flex-end;
-      border-bottom-right-radius: 4px;
-    }
-
-    .received {
-      background: #e9ecef;
-      color: #222;
-      align-self: flex-start;
-      border-bottom-left-radius: 4px;
-    }
-
-    .input-area {
-      display: flex;
-      padding: 10px;
-      border-top: 1px solid #ddd;
-      background: #fff;
-    }
-
-    .input-area input {
-      flex: 1;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-
-    .input-area button {
-      margin-left: 8px;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      background: #0078ff;
-      color: white;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .input-area button:hover {
-      background: #005ecc;
-    }
-
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-    }
-
-    .modal-box {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 320px;
-      text-align: center;
-    }
-
-    .modal-box input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-
-    .modal-box button {
-      margin-top: 12px;
-      padding: 10px 18px;
-      background: #0078ff;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+    body { font-family: Poppins, sans-serif; background:#f5f7fa; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+    .chat-container { width:90%; max-width:600px; height:80vh; display:flex; flex-direction:column; background:white; border-radius:10px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.1); }
+    .header { background:#0078ff; color:white; padding:12px; text-align:center; font-weight:600; }
+    .messages { flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; background:#f9fbfd; }
+    .msg { margin:6px 0; padding:10px 14px; border-radius:16px; max-width:80%; font-size:15px; }
+    .sent { background:#0078ff; color:white; align-self:flex-end; }
+    .received { background:#e9ecef; color:#333; align-self:flex-start; }
+    .input-area { display:flex; padding:10px; border-top:1px solid #ddd; background:white; }
+    input { flex:1; padding:10px; border-radius:6px; border:1px solid #ccc; }
+    button { margin-left:8px; background:#0078ff; color:white; border:none; border-radius:6px; padding:10px 16px; cursor:pointer; }
+    button:hover { background:#005ecc; }
+    .modal { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); }
+    .modal-box { background:white; padding:20px; border-radius:8px; text-align:center; width:90%; max-width:300px; }
   </style>
 </head>
 <body>
 
-  <!-- Name Prompt Modal -->
   <div class="modal" id="nameModal">
     <div class="modal-box">
       <h3>Enter your name</h3>
       <input type="text" id="username" placeholder="Your name...">
-      <button onclick="setName()">Start Chat</button>
+      <button onclick="startChat()">Start Chat</button>
     </div>
   </div>
 
-  <!-- Chat Box -->
-  <div class="chat-box" id="chatBox" style="display:none;">
-    <div class="header">Live Chat</div>
+  <div class="chat-container" id="chatContainer" style="display:none;">
+    <div class="header">Live Support</div>
     <div class="messages" id="messages"></div>
     <div class="input-area">
-      <input type="text" id="messageInput" placeholder="Type a message...">
+      <input type="text" id="messageInput" placeholder="Type your message...">
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
 
-  <script>
-    // 🔥 Firebase Config
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyDud4J9uxXMCZWjGlL9tB41uuwp9GDWAZc",
   authDomain: "year2-fc6a8.firebaseapp.com",
@@ -173,56 +51,57 @@ const firebaseConfig = {
   messagingSenderId: "822721362532",
   appId: "1:822721362532:web:cf8fdf629989f6248f3d71"
 };
-    firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    const db = firebase.database();
-    let user = "";
+let chatId = localStorage.getItem("chatId");
+let username = localStorage.getItem("username");
 
-    function setName() {
-      const name = document.getElementById("username").value.trim();
-      if (!name) return alert("Please enter your name");
-      user = name;
-      document.getElementById("nameModal").style.display = "none";
-      document.getElementById("chatBox").style.display = "flex";
-      listenMessages();
-    }
+if (chatId && username) {
+  document.getElementById("nameModal").style.display = "none";
+  document.getElementById("chatContainer").style.display = "flex";
+  listenForMessages();
+}
 
-    function sendMessage() {
-      const input = document.getElementById("messageInput");
-      const text = input.value.trim();
-      if (text === "") return;
+function startChat() {
+  username = document.getElementById("username").value.trim();
+  if (!username) return alert("Please enter your name");
 
-      const msg = {
-        user: user,
-        text: text,
-        timestamp: new Date().toISOString()
-      };
-      db.ref("orli_live_chat").push(msg);
-      input.value = "";
+  chatId = "user_" + Date.now();
+  localStorage.setItem("chatId", chatId);
+  localStorage.setItem("username", username);
 
-      // Trigger mailto alert for each new message
-      sendEmailAlert(user, text);
-    }
+  db.ref("chats/" + chatId).set({ username, startedAt: new Date().toISOString() });
 
-    function listenMessages() {
-      const box = document.getElementById("messages");
-      db.ref("orli_live_chat").on("child_added", snapshot => {
-        const m = snapshot.val();
-        const div = document.createElement("div");
-        div.classList.add("msg");
-        div.classList.add(m.user === user ? "sent" : "received");
-        div.innerHTML = `<b>${m.user}</b><br>${m.text}<br><small>${new Date(m.timestamp).toLocaleTimeString()}</small>`;
-        box.appendChild(div);
-        box.scrollTop = box.scrollHeight;
-      });
-    }
+  document.getElementById("nameModal").style.display = "none";
+  document.getElementById("chatContainer").style.display = "flex";
+  listenForMessages();
+}
 
-    // Simple Email Alert
-    function sendEmailAlert(sender, message) {
-      const subject = encodeURIComponent(`New Chat Message from ${sender}`);
-      const body = encodeURIComponent(`Message: ${message}\n\nFrom: ${sender}`);
-      window.open(`mailto:smith4jones778@gmail.com?subject=${subject}&body=${body}`, '_blank');
-    }
-  </script>
+function sendMessage() {
+  const input = document.getElementById("messageInput");
+  const text = input.value.trim();
+  if (!text) return;
+  const message = {
+    sender: username,
+    text,
+    timestamp: new Date().toISOString()
+  };
+  db.ref(`chats/${chatId}/messages`).push(message);
+  input.value = "";
+}
+
+function listenForMessages() {
+  const box = document.getElementById("messages");
+  db.ref(`chats/${chatId}/messages`).on("child_added", snap => {
+    const msg = snap.val();
+    const div = document.createElement("div");
+    div.classList.add("msg", msg.sender === username ? "sent" : "received");
+    div.innerHTML = `<b>${msg.sender}</b><br>${msg.text}`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  });
+}
+</script>
 </body>
 </html>
