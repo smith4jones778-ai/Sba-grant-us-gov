@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Chat Dashboard | Agent Chen K</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <style>
+    body {font-family:Poppins,sans-serif;margin:0;display:flex;height:100vh;background:#f2f5f9;}
+    aside {width:280px;background:#0078ff;color:white;padding:20px;display:flex;flex-direction:column;}
+    h2 {margin-top:0;text-align:center;}
+    #userList {flex:1;overflow-y:auto;margin-top:10px;}
+    .userItem {padding:10px;background:#0060cc;margin-bottom:8px;border-radius:6px;cursor:pointer;}
+    .userItem:hover {background:#0050aa;}
+    main {flex:1;display:flex;flex-direction:column;}
+    header {background:#0078ff;color:white;padding:12px;text-align:center;font-weight:600;}
+    .messages {flex:1;padding:15px;overflow-y:auto;background:#eef3f8;display:flex;flex-direction:column;}
+    .msg {margin:6px 0;padding:10px 14px;border-radius:16px;max-width:70%;font-size:15px;word-wrap:break-word;}
+    .sent {background:#0078ff;color:white;align-self:flex-end;}
+    .received {background:#e9ecef;align-self:flex-start;}
+    .meta {font-size:11px;color:#555;margin-top:3px;}
+    .input-area {display:flex;padding:10px;border-top:1px solid #ddd;background:white;}
+    textarea {flex:1;padding:10px;border-radius:6px;border:1px solid #ccc;resize:none;font-family:inherit;}
+    button {margin-left:8px;background:#0078ff;color:white;border:none;border-radius:6px;padding:10px 16px;cursor:pointer;}
+    button:hover {background:#005fcc;}
+    .deleteBtn {background:#ff4444;margin-top:4px;}
+    .deleteBtn:hover {background:#cc0000;}
+  </style>
+</head>
+<body>
+  <aside>
+    <h2>💬 Active Users</h2>
+    <div id="userList"></div>
+  </aside>
+
+  <main>
+    <header>Admin — Agent</header>
+    <div class="messages" id="messages"></div>
+    <div class="input-area">
+      <textarea id="replyInput" placeholder="Type your reply..."></textarea>
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </main>
+
+  <audio id="notifySound" src="https://assets.mixkit.co/active_storage/sfx/2212/2212-preview.mp3"></audio>
+
+<script>
+  // =================== FIREBASE SETUP =====================
+  const firebaseConfig = {
+    apiKey: "AIzaSyB4DMYZJHWgbRUZV-uamOy7TpxLM1sGYPY",
+    authDomain: "chats-afcff.firebaseapp.com",
+    databaseURL: "https://chats-afcff-default-rtdb.firebaseio.com",
+    projectId: "chats-afcff",
+    storageBucket: "chats-afcff.appspot.com",
+    messagingSenderId: "764250889947",
+    appId: "1:764250889947:web:2c843497ce389edf5876fe"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // =================== EMAILJS SETUP =====================
+  const EMAILJS_SERVICE = "service_au8aho1";
+  const EMAILJS_TEMPLATE = "template_7gfx3ty";
+  const EMAILJS_PUBLIC_KEY = "NH7GD7-O8VKuKcfab";
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+
+  const ADMIN_NAME = "Agent";
+  const ADMIN_EMAIL = "smith4jones778@gmail.com";
+
+  let currentChatId = "";
+  let currentUserEmail = "";
+  let currentUserName = "";
+
+  // =================== LOAD USER LIST =====================
+  function loadUsers() {
+    const userList = document.getElementById("userList");
+    db.ref("chats").on("value", snapshot => {
+      userList.innerHTML = "";
+      snapshot.forEach(child => {
+        const data = child.val();
+        const div = document.createElement("div");
+        div.className = "userItem";
+        div.textContent = `${data.username} (${data.email})`;
+        div.onclick = () => openChat(child.key, data.username, data.email);
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "Delete";
+        delBtn.className = "deleteBtn";
+        delBtn.onclick = e => {
+          e.stopPropagation();
+          if (confirm(`Delete chat with ${data.username}?`)) {
+            db.ref("chats/" + child.key).remove();
+          }
+        };
+
+        div.appendChild(document.createElement("br"));
+        div.appendChild(delBtn);
+        userList.appendChild(div);
+      });
+    });
+  }
+
+  loadUsers();
+
+  // =================== OPEN CHAT =====================
+  function openChat(chatId, userName, userEmail) {
+    currentChatId = chatId;
+    currentUserName = userName;
+    currentUserEmail = userEmail;
+    document.getElementById("messages").innerHTML = "";
+
+    db.ref(`chats/${chatId}/messages`).off();
+    db.ref(`chats/${chatId}/messages`).on("child_added", snap => {
+      const msg = snap.val();
+      const div = document.createElement("div");
+      div.classList.add("msg", msg.sender === ADMIN_NAME ? "sent" : "received");
+      div.innerHTML = `<b>${msg.sender}</b><br>${msg.text}<div class="meta">${new Date(msg.timestamp).toLocaleString()}</div>`;
+      document.getElementById("messages").appendChild(div);
+      document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+
+      if (msg.sender !== ADMIN_NAME) {
+        document.getElementById("notifySound").play();
+        // Notify Admin by Email
+        sendEmailToAdmin(msg.sender, currentUserEmail, msg.text);
+      }
+    });
+  }
+
+  // =================== SEND MESSAGE =====================
+  function sendMessage() {
+    const text = document.getElementById("replyInput").value.trim();
+    if (!text || !currentChatId) return alert("Select a user first!");
+    document.getElementById("replyInput").value = "";
+
+    const msg = {
+      sender: ADMIN_NAME,
+      text,
+      timestamp: new Date().toISOString()
+    };
+
+    db.ref(`chats/${currentChatId}/messages`).push(msg);
+
+    // Notify user by Email
+    sendEmailToUser(currentUserEmail, `Reply from ${ADMIN_NAME}`, ADMIN_NAME, text);
+  }
+
+  // =================== EMAILJS FUNCTIONS =====================
+  function sendEmailToUser(to, subject, fromName, messageText) {
+    const params = {
+      to_email: to,
+      from_name: fromName || ADMIN_NAME,
+      from_email: ADMIN_EMAIL,
+      subject: subject,
+      message: messageText
+    };
+
+    emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
+      .then(() => console.log("✅ Email sent to user:", to))
+      .catch(err => console.error("❌ EmailJS error:", err));
+  }
+
+  function sendEmailToAdmin(fromName, fromEmail, text) {
+    const params = {
+      to_email: ADMIN_EMAIL,
+      from_name: fromName,
+      from_email: fromEmail,
+      subject: `New message from ${fromName}`,
+      message: `New message from ${fromName} (${fromEmail}):\n\n${text}`
+    };
+
+    emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
+      .then(() => console.log("✅ Admin notified by email"))
+      .catch(err => console.error("❌ Admin email error:", err));
+  }
+</script>
+</body>
+</html>

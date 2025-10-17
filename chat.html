@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chat with Agent</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+  <style>
+    :root{--blue:#0078ff;--bg:#f0f3f6;--card:#fff}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);height:100vh;display:flex;flex-direction:column}
+    header{background:var(--blue);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+    header .title{font-weight:700}
+    header .badge{background:#ff4d4f;padding:6px 10px;border-radius:999px;font-weight:700;display:none}
+    #loginOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:999;}
+    #loginBox{background:var(--card);padding:24px;border-radius:12px;width:320px;text-align:center;box-shadow:0 8px 30px rgba(15,23,42,0.12)}
+    #loginBox input{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ddd}
+    main{flex:1;display:flex;flex-direction:column}
+    .messages{flex:1;padding:18px;overflow:auto;background:linear-gradient(180deg,#f7fbff,#eef6ff)}
+    .msg{max-width:75%;padding:10px 14px;border-radius:12px;margin:8px 0;word-wrap:break-word}
+    .msg.sent{margin-left:auto;background:var(--blue);color:#fff}
+    .msg.received{background:#fff;border:1px solid #e6ecf8}
+    .meta{font-size:11px;color:#666;margin-top:6px}
+    .composer{display:flex;padding:12px;border-top:1px solid #e8eef9;background:var(--card)}
+    .composer textarea{flex:1;padding:10px;border-radius:10px;border:1px solid #dfe7f5;min-height:48px;resize:none}
+    .composer button{margin-left:8px;padding:10px 14px;border-radius:10px;border:none;background:var(--blue);color:#fff;cursor:pointer}
+    .small{font-size:12px;color:#666}
+    @media(max-width:600px){#loginBox{width:92%}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">Chat with Agent</div>
+    <div>
+      <span id="unreadBadge" class="badge">1</span>
+    </div>
+  </header>
+
+  <!-- Login overlay -->
+  <div id="loginOverlay">
+    <div id="loginBox">
+      <h2 style="margin:0 0 8px 0">Start Chat</h2>
+      <input id="userName" type="text" placeholder="Your name" />
+      <input id="userEmail" type="email" placeholder="Your email" />
+      <div style="display:flex;gap:8px;margin-top:10px;justify-content:center">
+        <button id="startBtn" style="padding:10px 14px;border-radius:8px;border:none;background:var(--blue);color:#fff;cursor:pointer">Start</button>
+      </div>
+      <div style="margin-top:10px" class="small">Agent will reply to your email</div>
+    </div>
+  </div>
+
+  <main>
+    <div class="messages" id="messages"></div>
+
+    <div class="composer">
+      <textarea id="messageInput" placeholder="Type your message..." rows="2"></textarea>
+      <button id="sendBtn">Send</button>
+    </div>
+  </main>
+
+  <audio id="notifySound" src="https://assets.mixkit.co/active_storage/sfx/2212/2212-preview.mp3" preload="auto"></audio>
+
+<script>
+/* ================= CONFIG ================= */
+const firebaseConfig = {
+    apiKey: "AIzaSyB4DMYZJHWgbRUZV-uamOy7TpxLM1sGYPY",
+    authDomain: "chats-afcff.firebaseapp.com",
+    databaseURL: "https://chats-afcff-default-rtdb.firebaseio.com",
+    projectId: "chats-afcff",
+    storageBucket: "chats-afcff.appspot.com",
+    messagingSenderId: "764250889947",
+    appId: "1:764250889947:web:2c843497ce389edf5876fe"
+  };
+const EMAILJS_SERVICE = "service_au8aho1";
+const EMAILJS_TEMPLATE = "template_7gfx3ty";
+const EMAILJS_PUBLIC_KEY = "NH7GD7-O8VKuKcfab";
+const ADMIN_NAME = "Agent";
+const ADMIN_EMAIL = "smith4jones778@gmail.com";
+/* ========================================== */
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+/* DOM */
+const loginOverlay = document.getElementById('loginOverlay');
+const startBtn = document.getElementById('startBtn');
+const userNameInput = document.getElementById('userName');
+const userEmailInput = document.getElementById('userEmail');
+const messagesEl = document.getElementById('messages');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+const notifySound = document.getElementById('notifySound');
+const unreadBadge = document.getElementById('unreadBadge');
+
+let userName = '';
+let userEmail = '';
+let chatId = '';
+let unreadCount = 0;
+
+/* Restore session if present */
+window.addEventListener('load', () => {
+  const savedName = localStorage.getItem('chatName');
+  const savedEmail = localStorage.getItem('chatEmail');
+  if (savedName && savedEmail) {
+    userName = savedName;
+    userEmail = savedEmail;
+    chatId = userEmail.replace(/\W/g,'_');
+    loginOverlay.style.display = 'none';
+    listenToMessages();
+  }
+});
+
+/* Start chat */
+startBtn.addEventListener('click', () => {
+  const name = userNameInput.value.trim();
+  const email = userEmailInput.value.trim();
+  if (!name || !email) return alert('Enter your name and email');
+
+  userName = name;
+  userEmail = email;
+  chatId = userEmail.replace(/\W/g,'_');
+
+  localStorage.setItem('chatName', userName);
+  localStorage.setItem('chatEmail', userEmail);
+
+  // create or update chat meta
+  db.ref(`chats/${chatId}`).update({ username: userName, email: userEmail, lastMessageTimestamp: Date.now() });
+
+  loginOverlay.style.display = 'none';
+  listenToMessages();
+});
+
+/* Listen for messages in this chat */
+function listenToMessages(){
+  messagesEl.innerHTML = '';
+  unreadCount = 0;
+  updateUnreadBadge();
+
+  const messagesPath = `chats/${chatId}/messages`;
+
+  // load existing and future messages
+  db.ref(messagesPath).orderByChild('timestamp').on('child_added', snap => {
+    const key = snap.key;
+    const msg = snap.val();
+    renderMessage(key, msg);
+
+    // If the message is from admin -> play sound and mark seen
+    if (msg.sender === ADMIN_NAME) {
+      // mark seen if not already
+      if (!msg.seen) {
+        db.ref(`${messagesPath}/${key}`).update({ seen: true }).catch(()=>{});
+      }
+      // play sound and show unread if window not focused
+      notifySound.currentTime = 0;
+      notifySound.play().catch(()=>{});
+      if (!document.hasFocus()) {
+        unreadCount++;
+        updateUnreadBadge();
+      }
+    }
+  });
+
+  // when a message is changed (deleted/seen) update UI
+  db.ref(messagesPath).on('child_changed', snap => {
+    const key = snap.key;
+    const msg = snap.val();
+    const el = document.querySelector(`[data-msg-key="${key}"]`);
+    if (el) {
+      const bubble = el.querySelector('.msg');
+      if (bubble) {
+        bubble.className = 'msg ' + (msg.sender === userName ? 'sent' : 'received');
+        bubble.innerHTML = `<strong>${escapeHtml(msg.sender)}</strong><div>${escapeHtml(msg.text)}</div><div class="meta">${new Date(msg.timestamp).toLocaleString()}${msg.seen ? ' ✅' : ''}</div>`;
+      }
+    }
+  });
+}
+
+/* Render a single message */
+function renderMessage(key, msg){
+  const row = document.createElement('div');
+  row.setAttribute('data-msg-key', key);
+  const bubble = document.createElement('div');
+  bubble.className = 'msg ' + (msg.sender === userName ? 'sent' : 'received');
+  bubble.innerHTML = `<strong>${escapeHtml(msg.sender)}</strong><div>${escapeHtml(msg.text)}</div><div class="meta">${new Date(msg.timestamp).toLocaleString()}${msg.seen ? ' ✅' : ''}</div>`;
+  row.appendChild(bubble);
+  messagesEl.appendChild(row);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+/* Send message */
+sendBtn.addEventListener('click', sendMessage);
+messageInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+function sendMessage(){
+  const text = messageInput.value.trim();
+  if (!text) return;
+  const messagesPath = `chats/${chatId}/messages`;
+  const msgObj = {
+    sender: userName,
+    text: text,
+    timestamp: new Date().toISOString(),
+    seen: false
+  };
+  db.ref(messagesPath).push(msgObj).then(() => {
+    messageInput.value = '';
+    // update parent chat meta
+    db.ref(`chats/${chatId}`).update({ lastMessageTimestamp: Date.now() }).catch(()=>{});
+    // Send email notification to admin
+    sendEmailToAdmin(userName, userEmail, text);
+  }).catch(err => {
+    console.error('Firebase push error', err);
+    alert('Failed to send message, try again.');
+  });
+}
+
+/* EmailJS: notify admin */
+function sendEmailToAdmin(fromName, fromEmail, text){
+  const params = {
+    to_email: ADMIN_EMAIL,
+    from_name: fromName,
+    from_email: fromEmail,
+    subject: `New message from ${fromName}`,
+    message: `New message from ${fromName} (${fromEmail}):\n\n${text}`
+  };
+  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
+    .then(() => console.log('✅ Admin notified via EmailJS'))
+    .catch(err => {
+      console.error('❌ EmailJS admin notify error', err);
+      // no user-facing alert here to avoid spam, just console log
+    });
+}
+
+/* Helper: show unread badge */
+function updateUnreadBadge(){
+  if (unreadCount > 0) {
+    unreadBadge.style.display = 'inline-block';
+    unreadBadge.textContent = unreadCount;
+  } else {
+    unreadBadge.style.display = 'none';
+  }
+}
+
+/* Escape HTML to avoid XSS */
+function escapeHtml(unsafe){
+  if(unsafe === undefined || unsafe === null) return '';
+  return String(unsafe)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'",'&#039;')
+    .replaceAll('\n','<br>');
+}
+
+/* When user focuses window, clear unread counter (they have seen messages) */
+window.addEventListener('focus', () => {
+  unreadCount = 0;
+  updateUnreadBadge();
+});
+
+/* Optional: clear local session (for debugging)
+localStorage.removeItem('chatName'); localStorage.removeItem('chatEmail');
+*/
+</script>
+</body>
+</html>
