@@ -145,13 +145,16 @@
   const db = firebase.database();
 
   // 📧 EmailJS Setup
-  emailjs.init("NH7GD7-O8VKuKcfab");
+  const EMAILJS_SERVICE = "service_au8aho1";
+  const EMAILJS_TEMPLATE = "template_7gfx3ty";
+  const EMAILJS_PUBLIC_KEY = "NH7GD7-O8VKuKcfab";
+  emailjs.init(EMAILJS_PUBLIC_KEY);
 
   const adminName = "Agent";
   const adminEmail = "smith4778@gmail.com";
   let userName = "", userEmail = "", chatId = "";
 
-  // Restore saved session if available
+  // Restore saved session
   window.onload = () => {
     const savedName = localStorage.getItem("chatName");
     const savedEmail = localStorage.getItem("chatEmail");
@@ -173,7 +176,6 @@
     chatId = userEmail.replace(/\W/g, "_");
     localStorage.setItem("chatName", userName);
     localStorage.setItem("chatEmail", userEmail);
-
     db.ref(`chats/${chatId}`).update({ username: userName, email: userEmail });
 
     document.getElementById("loginForm").style.display = "none";
@@ -181,7 +183,7 @@
     listenToMessages();
   }
 
-  // 🔁 Listen for new messages in real-time
+  // 🔁 Listen to chat
   function listenToMessages() {
     const messagesDiv = document.getElementById("messages");
     messagesDiv.innerHTML = "";
@@ -201,20 +203,38 @@
     });
   }
 
-  // ✅ Universal EmailJS Send Function
-function sendEmail(to, fromName, fromEmail, subject, message) {
-  const params = {
-    to_email: to,
-    from_name: fromName,
-    from_email: fromEmail,
-    subject: subject,
-    message: message
-  };
+  // 📩 Send message
+  function sendMessage() {
+    const text = document.getElementById("replyInput").value.trim();
+    if (!text) return;
 
-  emailjs.send("service_au8aho1", "template_7gfx3ty", params)
-    .then(() => console.log("✅ Email sent successfully"))
-    .catch(err => console.error("❌ Email failed:", err));
-}
+    const msgData = {
+      sender: userName,
+      text,
+      timestamp: Date.now(),
+      seen: false
+    };
+    db.ref(`chats/${chatId}/messages`).push(msgData);
+    document.getElementById("replyInput").value = "";
+
+    // ✉️ Send Email to Admin
+    sendEmailToAdmin(userName, userEmail, text);
+  }
+
+  // ✅ EmailJS Functions
+  function sendEmailToAdmin(fromName, fromEmail, text) {
+    const params = {
+      to_email: adminEmail,
+      from_name: fromName,
+      from_email: fromEmail,
+      subject: `New message from ${fromName}`,
+      message: `New message from ${fromName} (${fromEmail}):\n\n${text}`
+    };
+
+    emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
+      .then(() => console.log("✅ Admin notified by EmailJS"))
+      .catch(err => console.error("❌ EmailJS failed:", err));
+  }
 </script>
 </body>
 </html>
