@@ -12,7 +12,7 @@
     aside {width:280px;background:#0078ff;color:white;padding:20px;display:flex;flex-direction:column;}
     h2 {margin-top:0;text-align:center;}
     #userList {flex:1;overflow-y:auto;margin-top:10px;}
-    .userItem {padding:10px;background:#0060cc;margin-bottom:8px;border-radius:6px;cursor:pointer;position:relative;}
+    .userItem {padding:10px;background:#0060cc;margin-bottom:8px;border-radius:6px;cursor:pointer;}
     .userItem:hover {background:#0050aa;}
     main {flex:1;display:flex;flex-direction:column;}
     header {background:#0078ff;color:white;padding:12px;text-align:center;font-weight:600;}
@@ -47,7 +47,7 @@
   <audio id="notifySound" src="https://assets.mixkit.co/active_storage/sfx/2212/2212-preview.mp3"></audio>
 
 <script>
-/* ================== FIREBASE CONFIG ================== */
+/* ================= FIREBASE CONFIG ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyBK5UM0n8-GLvleW7l6B8Hi-_WuC64QA4U",
   authDomain: "scores-b25a7.firebaseapp.com",
@@ -59,22 +59,22 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/* ================== EMAILJS CONFIG ================== */
+/* ================= EMAILJS CONFIG ================= */
 const EMAILJS_SERVICE = "service_7servqq";
 const EMAILJS_TEMPLATE = "template_abw3a7q";
 const EMAILJS_PUBLIC_KEY = "ayBtD4ucWPOYC7x47";
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
-/* ================== ADMIN SETTINGS ================== */
+/* ================= ADMIN SETTINGS ================= */
 const ADMIN_NAME = "Agent";
 const ADMIN_EMAIL = "smith4778@gmail.com";
 
-/* ================== GLOBALS ================== */
+/* ================= GLOBAL VARS ================= */
 let currentChatId = "";
 let currentUserEmail = "";
 let currentUserName = "";
 
-/* ================== LOAD USER LIST ================== */
+/* ================= LOAD USERS ================= */
 function loadUsers() {
   const userList = document.getElementById("userList");
   db.ref("chats").on("value", snapshot => {
@@ -84,13 +84,13 @@ function loadUsers() {
       return;
     }
 
-    // Sort chats by latest activity
     const chats = [];
     snapshot.forEach(child => {
       const val = child.val();
       chats.push({ key: child.key, ...val });
     });
-    chats.sort((a,b) => (b.lastMessageTimestamp || 0) - (a.lastMessageTimestamp || 0));
+
+    chats.sort((a, b) => (b.lastMessageTimestamp || 0) - (a.lastMessageTimestamp || 0));
 
     chats.forEach(data => {
       const div = document.createElement("div");
@@ -117,27 +117,9 @@ function loadUsers() {
     });
   });
 }
-
 loadUsers();
 
-/* ================== LISTEN FOR NEW USER MESSAGES (GLOBAL) ================== */
-// This makes sure the admin gets email notifications even if no chat is open
-db.ref("chats").on("child_added", snap => {
-  const chatId = snap.key;
-  const chatData = snap.val();
-  if (!chatData || !chatData.email) return;
-
-  // Listen for new messages inside each chat
-  db.ref(`chats/${chatId}/messages`).on("child_added", msgSnap => {
-    const msg = msgSnap.val();
-    if (msg && msg.sender !== ADMIN_NAME) {
-      // Send email to admin when user sends message
-      sendEmailToAdmin(msg.sender, chatData.email, msg.text);
-    }
-  });
-});
-
-/* ================== OPEN CHAT ================== */
+/* ================= OPEN CHAT ================= */
 function openChat(chatId, userName, userEmail) {
   currentChatId = chatId;
   currentUserName = userName;
@@ -155,7 +137,6 @@ function openChat(chatId, userName, userEmail) {
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-    // Play sound and mark as seen
     if (msg.sender !== ADMIN_NAME) {
       document.getElementById("notifySound").play().catch(()=>{});
       db.ref(`chats/${chatId}/messages/${snap.key}`).update({ seen: true });
@@ -163,7 +144,7 @@ function openChat(chatId, userName, userEmail) {
   });
 }
 
-/* ================== SEND MESSAGE ================== */
+/* ================= SEND MESSAGE ================= */
 document.getElementById("sendBtn").addEventListener("click", sendMessage);
 document.getElementById("replyInput").addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.shiftKey) {
@@ -192,7 +173,7 @@ function sendMessage() {
   });
 }
 
-/* ================== EMAIL FUNCTIONS ================== */
+/* ================= EMAIL TO USER ================= */
 function sendEmailToUser(to, subject, fromName, messageText) {
   const params = {
     to_email: to,
@@ -206,20 +187,7 @@ function sendEmailToUser(to, subject, fromName, messageText) {
     .catch(err => console.error("❌ EmailJS error:", err));
 }
 
-function sendEmailToAdmin(fromName, fromEmail, text) {
-  const params = {
-    to_email: ADMIN_EMAIL,
-    from_name: fromName,
-    from_email: fromEmail,
-    subject: `💬 New chat message from ${fromName}`,
-    message: `New message from ${fromName} (${fromEmail}):\n\n${text}`
-  };
-  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
-    .then(() => console.log("✅ Admin notified by email"))
-    .catch(err => console.error("❌ Admin email error:", err));
-}
-
-/* ================== HELPER ================== */
+/* ================= ESCAPE HTML ================= */
 function escapeHtml(unsafe) {
   if(!unsafe) return "";
   return String(unsafe)
