@@ -4,15 +4,29 @@
   <meta charset="UTF-8">
   <title>Admin Chat Dashboard | Agent Chen K</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
   <style>
     body { font-family: Poppins, sans-serif; background:#f0f3f6; margin:0; display:flex; height:100vh; }
-    .sidebar { width:250px; background:white; border-right:1px solid #ddd; overflow-y:auto; }
-    .sidebar h2 { background:#0078ff; color:white; margin:0; padding:12px; text-align:center; }
-    .chat-list div { padding:12px; cursor:pointer; border-bottom:1px solid #eee; }
+    .sidebar { width:250px; background:white; border-right:1px solid #ddd; overflow-y:auto; position:relative; }
+    .sidebar h2 { background:#0078ff; color:white; margin:0; padding:12px; text-align:center; position:relative; }
+    .chat-list div { padding:12px; cursor:pointer; border-bottom:1px solid #eee; position:relative; }
     .chat-list div:hover { background:#f4f8ff; }
     .chat-list .active { background:#dceaff; }
+    .badge {
+      position:absolute;
+      right:10px;
+      top:10px;
+      background:red;
+      color:white;
+      font-size:12px;
+      border-radius:50%;
+      padding:3px 7px;
+      display:none;
+    }
     .main { flex:1; display:flex; flex-direction:column; }
     .header { background:#0078ff; color:white; padding:12px; font-weight:600; }
     .messages { flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; }
@@ -26,7 +40,7 @@
 </head>
 <body>
   <div class="sidebar">
-    <h2>Chats</h2>
+    <h2>Chats <span id="mainBadge" class="badge">0</span></h2>
     <div class="chat-list" id="chatList"></div>
   </div>
 
@@ -39,8 +53,7 @@
     </div>
   </div>
 
-  <!-- 🔔 Hidden notification sound -->
-  <audio id="notifSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+  <audio id="notificationSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
 <script>
 const firebaseConfig = {
@@ -57,20 +70,8 @@ const db = firebase.database();
 
 const agent = "Agent Chen K";
 let currentChat = null;
-
-// 🔔 Play notification sound
-function playSound() {
-  const sound = document.getElementById("notifSound");
-  sound.currentTime = 0;
-  sound.play().catch(() => {}); // prevents blocking errors
-}
-
-// 📧 Optional email alert (change to your email if needed)
-function sendEmailAlert(username, message) {
-  const subject = encodeURIComponent(`New Chat Message from ${username}`);
-  const body = encodeURIComponent(`Message: ${message}\n\nFrom: ${username}`);
-  window.open(`mailto:your-email@example.com?subject=${subject}&body=${body}`, "_blank");
-}
+let unreadCounts = {}; // track unread messages per chat
+let totalUnread = 0;
 
 // Load chat list
 db.ref("chats").on("value", snap => {
@@ -81,15 +82,84 @@ db.ref("chats").on("value", snap => {
     const div = document.createElement("div");
     div.textContent = chat.username;
     div.onclick = () => openChat(child.key, chat.username);
+    div.id = "chat-" + child.key;
+
+    const badge = document.createElement("span");
+    badge.classList.add("badge");
+    badge.id = "badge-" + child.key;
+    badge.textContent = unreadCounts[child.key] || 0;
+    if (unreadCounts[child.key] > 0) badge.style.display = "inline";
+    div.appendChild(badge);
+
     if (currentChat === child.key) div.classList.add("active");
     chatList.appendChild(div);
+
+    // Listen for new messages for notification
+    listenForNewMessages(child.key, chat.username);
   });
 });
+
+function listenForNewMessages(chatId, username) {
+  db.ref(`chats/${chatId}/messages`).off("child_added");
+  db.ref(`chats/${chatId}/messages`).on("child_added", snap => {
+    const msg = snap.val();
+    if (msg.sender !== agent) {
+      if (currentChat !== chatId) {
+        playNotificationSound();
+        incrementBadge(chatId);
+      }
+    }
+  });
+}
+
+function playNotificationSound() {
+  const sound = document.getElementById("notificationSound");
+  sound.currentTime = 0;
+  sound.play();
+}
+
+function incrementBadge(chatId) {
+  unreadCounts[chatId] = (unreadCounts[chatId] || 0) + 1;
+  totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
+  updateBadges();
+}
+
+function resetBadge(chatId) {
+  unreadCounts[chatId] = 0;
+  totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
+  updateBadges();
+}
+
+function updateBadges() {
+  for (const id in unreadCounts) {
+    const badge = document.getElementById("badge-" + id);
+    if (badge) {
+      if (unreadCounts[id] > 0) {
+        badge.textContent = unreadCounts[id];
+        badge.style.display = "inline";
+      } else {
+        badge.style.display = "none";
+      }
+    }
+  }
+  const mainBadge = document.getElementById("mainBadge");
+  if (totalUnread > 0) {
+    mainBadge.textContent = totalUnread;
+    mainBadge.style.display = "inline";
+  } else {
+    mainBadge.style.display = "none";
+  }
+}
 
 function openChat(id, username) {
   currentChat = id;
   document.getElementById("chatHeader").textContent = "Chat with " + username;
   document.getElementById("messages").innerHTML = "";
+  document.querySelectorAll(".chat-list div").forEach(div => div.classList.remove("active"));
+  const currentDiv = document.getElementById("chat-" + id);
+  if (currentDiv) currentDiv.classList.add("active");
+
+  resetBadge(id);
 
   db.ref(`chats/${id}/messages`).off();
   db.ref(`chats/${id}/messages`).on("child_added", snap => {
@@ -100,13 +170,6 @@ function openChat(id, username) {
     const box = document.getElementById("messages");
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
-
-    // 🔔 Play alert for messages not sent by the agent
-    if (msg.sender !== agent) {
-      playSound();
-      // Optional: email alert (uncomment if you want)
-      // sendEmailAlert(msg.sender, msg.text);
-    }
   });
 }
 
@@ -120,4 +183,4 @@ function sendReply() {
 }
 </script>
 </body>
-</html>
+  </html>
