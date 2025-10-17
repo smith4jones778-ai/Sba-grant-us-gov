@@ -120,9 +120,7 @@
     </main>
   </div>
 
-  <audio id="notifySound" src="https://assets.mixkit.co/active_storage/sfx/2212/2212-preview.mp3" preload="auto"></audio>
-
-<script>
+  <script>
 /* =========================
    CONFIGURATION (edit only here)
    ========================= */
@@ -184,7 +182,8 @@ function fmtTime(ts){
 /* ---------------------------
    LISTEN FOR ALL CHATS (sidebar)
    --------------------------- */
-function loadUsers(filter=""){
+function loadUsers(){
+  // Attach a single handler which calls onChatsValue whenever chats change
   db.ref('chats').off('value', onChatsValue);
   db.ref('chats').on('value', onChatsValue);
 }
@@ -314,8 +313,9 @@ function openChat(chatId, chatMeta){
     if(el){
       const meta = el.querySelector('.msg-meta');
       if(meta) meta.textContent = `${fmtTime(msg.timestamp)} ${msg.seen ? ' ✅' : ''}`;
-      if(msg.deleted){
-        el.querySelector('.bubble').textContent = '[message deleted]';
+      const bubble = el.querySelector('.bubble');
+      if(msg.deleted && bubble){
+        bubble.innerHTML = '<strong style="display:block">'+escapeHtml(msg.sender)+'</strong>[message deleted]';
       }
     }
   });
@@ -336,7 +336,7 @@ function appendMessage(key, msg){
 
   const bubble = document.createElement('div');
   bubble.className = 'bubble ' + (msg.sender === ADMIN_NAME ? 'sent' : 'received');
-  bubble.innerHTML = `<strong style="display:block">${msg.sender}</strong>${escapeHtml(msg.text)}`;
+  bubble.innerHTML = `<strong style="display:block">${escapeHtml(msg.sender)}</strong>${escapeHtml(msg.text)}`;
 
   const meta = document.createElement('div');
   meta.className = 'msg-meta';
@@ -406,7 +406,8 @@ deleteMsgBtn.addEventListener('click', function(){
       // locally update UI
       const el = document.querySelector(`[data-msg-key="${selectedMessageKey}"]`);
       if(el){
-        el.querySelector('.bubble').textContent = '[message deleted]';
+        const bubble = el.querySelector('.bubble');
+        if(bubble) bubble.innerHTML = '<strong style="display:block">[deleted]</strong>';
       }
       selectedMessageKey = null;
       deleteMsgBtn.style.display = 'none';
@@ -434,7 +435,7 @@ deleteChatBtn.addEventListener('click', function(){
 
 /* ---------------------------
    EMAIL FUNCTIONS (EmailJS)
-   Template expects variables: to_email, from_name, from_email, message
+   Template expects variables: to_email, from_name, from_email, subject, message
    --------------------------- */
 function sendEmailToUser(to, subject, fromName, messageText) {
   const params = {
@@ -445,9 +446,9 @@ function sendEmailToUser(to, subject, fromName, messageText) {
     message: messageText
   };
 
-  emailjs.send("service_au8aho1", "template_7gfx3ty", params)
+  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
     .then(() => console.log("✅ Email sent to user:", to))
-    .catch(err => console.error("❌ EmailJS error:", err));
+    .catch(err => console.error("❌ EmailJS error (sendEmailToUser):", err));
 }
 
 function sendEmailToAdmin(fromName, fromEmail, text) {
@@ -459,7 +460,7 @@ function sendEmailToAdmin(fromName, fromEmail, text) {
     message: `New message from ${fromName} (${fromEmail}):\n\n${text}`
   };
 
-  emailjs.send("service_au8aho1", "template_7gfx3ty", params)
+  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
     .then(() => console.log("✅ Notified admin by email"))
     .catch(err => console.error("❌ EmailJS admin notify error:", err));
 }
@@ -481,37 +482,31 @@ db.ref('chats').on('child_added', childSnap => {
   }
 });
 
-db.ref('chats').on('child_changed', childSnap=>{
-  // Update sidebar immediately
-  // We'll re-render all via onChatsValue handler already attached
-});
-
-/* Also listen for any NEW message created anywhere to update unread counters and optionally notify admin */
-db.ref('chats').on('child_changed', function(childSnap){
-  const id = childSnap.key;
-  const data = childSnap.val() || {};
-  // If there is unreadCount property, leave it, else compute
-  // We'll keep unreadCount accurate by listening directly on messages
-});
-
 /* For each chat, watch messages added to update unread count & notify admin */
 function attachPerChatMessageWatcher(){
   db.ref('chats').once('value', snap=>{
     snap.forEach(chatSnap=>{
       const id = chatSnap.key;
+      const chatMeta = chatSnap.val() || {};
       const messagesPath = `chats/${id}/messages`;
+
+      // Avoid attaching duplicate listeners: remove then attach
+      db.ref(messagesPath).off('child_added');
       db.ref(messagesPath).on('child_added', msgSnap=>{
         const msg = msgSnap.val();
         if(!msg) return;
+
         // If message is from user (not admin), increase unreadCount and notify admin
         if(msg.sender !== ADMIN_NAME){
           // increment unreadCount atomically
           const cntRef = db.ref(`chats/${id}/unreadCount`);
           cntRef.transaction(current => (current||0)+1).catch(()=>{});
+
           // send email to admin
-          // but avoid flooding: only send if not flagged as 'adminNotified' for this message (we don't store that)
-          // to keep it simple, send a notification email for each new user message
-          sendEmailToAdmin(msg.sender, chatSnap.val().email || 'unknown', msg.text);
+          // include sender name and sender email (if available in chat meta)
+          const senderName = msg.sender || (chatMeta.username || 'User');
+          const senderEmail = chatMeta.email || 'no-reply@example.com';
+          sendEmailToAdmin(senderName, senderEmail, msg.text);
         }
       });
     });
@@ -525,7 +520,7 @@ attachPerChatMessageWatcher();
    Search & refresh
    --------------------------- */
 searchBox.addEventListener('input', () => {
-  // rerender will be triggered by onChatsValue; but to be safe call loadUsers
+  // re-render via onChatsValue (it will be triggered automatically), but we can also refresh immediately
   db.ref('chats').once('value').then(snap => {
     const users = [];
     snap.forEach(child => users.push({ id: child.key, ...child.val() }));
@@ -562,7 +557,6 @@ setInterval(()=>{
     renderUserList(users);
   });
 }, 15000);
-
 </script>
 </body>
 </html>
