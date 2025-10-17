@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bulk Email Sender — SBA Grant Program</title>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: #f4f6f8;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 25px;
+    }
+    h1 {
+      color: #0a3161;
+      font-size: 22px;
+      text-align: center;
+    }
+    textarea, input {
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      resize: vertical;
+      font-size: 15px;
+    }
+    textarea {
+      height: 120px;
+    }
+    button {
+      background-color: #0a3161;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 15px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #06315d;
+    }
+    .list {
+      background: #f9fafc;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+    .email-item {
+      margin-bottom: 4px;
+    }
+    .log {
+      margin-top: 15px;
+      font-size: 14px;
+      background: #f7f7f7;
+      padding: 10px;
+      border-radius: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bulk Email Sender — SBA Grant Program</h1>
+
+    <label><strong>Subject:</strong></label>
+    <input id="subject" type="text" placeholder="Enter email subject" value="SBA Grant Program Update — October–December">
+
+    <label style="margin-top:10px;"><strong>From Name:</strong></label>
+    <input id="from_name" type="text" placeholder="From name (e.g., SBA Grant Information Team)" value="SBA Grant Information Team">
+
+    <p style="margin-top:10px;">Paste up to <strong>20 email addresses</strong> (comma, space, or line separated):</p>
+    <textarea id="emails" placeholder="example1@email.com, example2@email.com, ..."></textarea>
+
+    <button id="prepareBtn">Prepare Recipients</button>
+
+    <div id="listContainer" class="list" style="display:none;"></div>
+    <button id="sendBtn" style="display:none;">Send Emails</button>
+
+    <div id="log" class="log"></div>
+  </div>
+
+  <script>
+    // Initialize EmailJS
+    emailjs.init("NH7GD7-O8VKuKcfab");
+
+    const emailsInput = document.getElementById("emails");
+    const subjectInput = document.getElementById("subject");
+    const fromInput = document.getElementById("from_name");
+    const prepareBtn = document.getElementById("prepareBtn");
+    const sendBtn = document.getElementById("sendBtn");
+    const listContainer = document.getElementById("listContainer");
+    const logContainer = document.getElementById("log");
+
+    let emailList = [];
+
+    // Step 1: Prepare emails
+    prepareBtn.addEventListener("click", () => {
+      const raw = emailsInput.value.trim();
+      if (!raw) return alert("Please enter at least one email address.");
+
+      const emails = raw.split(/[\s,;]+/).filter(e => e.includes("@"));
+      if (emails.length > 20) {
+        alert("You can only send to a maximum of 20 emails at once.");
+        return;
+      }
+
+      emailList = emails;
+      listContainer.innerHTML = "<strong>Prepared Recipients:</strong><br>" + emails.map(e => `<div class='email-item'>📧 ${e}</div>`).join("");
+      listContainer.style.display = "block";
+      sendBtn.style.display = "inline-block";
+      logContainer.innerHTML = "";
+    });
+
+    // Step 2: Send emails one-by-one with delay
+    sendBtn.addEventListener("click", async () => {
+      if (emailList.length === 0) return alert("No email addresses found.");
+
+      const subject = subjectInput.value.trim();
+      const fromName = fromInput.value.trim();
+
+      sendBtn.disabled = true;
+      logContainer.innerHTML += `<p>Sending ${emailList.length} emails...</p>`;
+
+      for (let i = 0; i < emailList.length; i++) {
+        const email = emailList[i];
+        logContainer.innerHTML += `<p>Sending to ${email}...</p>`;
+        try {
+          await emailjs.send("service_au8aho1", "template_yp2we75", {
+            email: email,          // matches {{email}} in template
+            subject: subject,      // matches {{subject}} in template
+            from_name: fromName,   // matches {{from_name}} in template
+          });
+          logContainer.innerHTML += `<p class='success'>✅ Sent to ${email}</p>`;
+        } catch (err) {
+          logContainer.innerHTML += `<p class='error'>❌ Failed to send to ${email}: ${err.text || err.message}</p>`;
+        }
+        await new Promise(r => setTimeout(r, 2500)); // wait 2.5s between sends
+      }
+
+      logContainer.innerHTML += `<p><strong>All emails processed.</strong></p>`;
+      sendBtn.disabled = false;
+    });
+  </script>
+</body>
+</html>
