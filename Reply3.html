@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Chat Dashboard | Agent Chen K</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <style>
+    body { font-family: Poppins, sans-serif; background:#f0f3f6; margin:0; display:flex; height:100vh; }
+    .sidebar { width:250px; background:white; border-right:1px solid #ddd; overflow-y:auto; }
+    .sidebar h2 { background:#0078ff; color:white; margin:0; padding:12px; text-align:center; }
+    .chat-list div { padding:12px; cursor:pointer; border-bottom:1px solid #eee; }
+    .chat-list div:hover { background:#f4f8ff; }
+    .chat-list .active { background:#dceaff; }
+    .main { flex:1; display:flex; flex-direction:column; }
+    .header { background:#0078ff; color:white; padding:12px; font-weight:600; }
+    .messages { flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; }
+    .msg { margin:6px 0; padding:10px 14px; border-radius:16px; max-width:70%; font-size:15px; }
+    .sent { background:#0078ff; color:white; align-self:flex-end; }
+    .received { background:#e9ecef; align-self:flex-start; }
+    .input-area { display:flex; padding:10px; border-top:1px solid #ddd; background:white; }
+    input { flex:1; padding:10px; border-radius:6px; border:1px solid #ccc; }
+    button { margin-left:8px; background:#0078ff; color:white; border:none; border-radius:6px; padding:10px 16px; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Chats</h2>
+    <div class="chat-list" id="chatList"></div>
+  </div>
+
+  <div class="main">
+    <div class="header" id="chatHeader">Select a chat</div>
+    <div class="messages" id="messages"></div>
+    <div class="input-area">
+      <input type="text" id="replyInput" placeholder="Type reply...">
+      <button onclick="sendReply()">Send</button>
+    </div>
+  </div>
+
+  <!-- 🔔 Hidden notification sound -->
+  <audio id="notifSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBK5UM0n8-GLvleW7l6B8Hi-_WuC64QA4U",
+  authDomain: "scores-b25a7.firebaseapp.com",
+  projectId: "scores-b25a7",
+  storageBucket: "scores-b25a7.appspot.com",
+  messagingSenderId: "1001957936318",
+  appId: "1:1001957936318:web:43934942ee87654fd8e2ef",
+  measurementId: "G-3QES2VR31T"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const agent = "Agent Chen K";
+let currentChat = null;
+
+// 🔔 Play notification sound
+function playSound() {
+  const sound = document.getElementById("notifSound");
+  sound.currentTime = 0;
+  sound.play().catch(() => {}); // prevents blocking errors
+}
+
+// 📧 Optional email alert (change to your email if needed)
+function sendEmailAlert(username, message) {
+  const subject = encodeURIComponent(`New Chat Message from ${username}`);
+  const body = encodeURIComponent(`Message: ${message}\n\nFrom: ${username}`);
+  window.open(`mailto:your-email@example.com?subject=${subject}&body=${body}`, "_blank");
+}
+
+// Load chat list
+db.ref("chats").on("value", snap => {
+  const chatList = document.getElementById("chatList");
+  chatList.innerHTML = "";
+  snap.forEach(child => {
+    const chat = child.val();
+    const div = document.createElement("div");
+    div.textContent = chat.username;
+    div.onclick = () => openChat(child.key, chat.username);
+    if (currentChat === child.key) div.classList.add("active");
+    chatList.appendChild(div);
+  });
+});
+
+function openChat(id, username) {
+  currentChat = id;
+  document.getElementById("chatHeader").textContent = "Chat with " + username;
+  document.getElementById("messages").innerHTML = "";
+
+  db.ref(`chats/${id}/messages`).off();
+  db.ref(`chats/${id}/messages`).on("child_added", snap => {
+    const msg = snap.val();
+    const div = document.createElement("div");
+    div.classList.add("msg", msg.sender === agent ? "sent" : "received");
+    div.innerHTML = `<b>${msg.sender}</b><br>${msg.text}`;
+    const box = document.getElementById("messages");
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+
+    // 🔔 Play alert for messages not sent by the agent
+    if (msg.sender !== agent) {
+      playSound();
+      // Optional: email alert (uncomment if you want)
+      // sendEmailAlert(msg.sender, msg.text);
+    }
+  });
+}
+
+function sendReply() {
+  const input = document.getElementById("replyInput");
+  const text = input.value.trim();
+  if (!text || !currentChat) return;
+  const msg = { sender: agent, text, timestamp: new Date().toISOString() };
+  db.ref(`chats/${currentChat}/messages`).push(msg);
+  input.value = "";
+}
+</script>
+</body>
+</html>
