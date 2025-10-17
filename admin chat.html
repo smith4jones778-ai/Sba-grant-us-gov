@@ -27,7 +27,6 @@
     button:hover {background:#005fcc;}
     .deleteBtn {background:#ff4444;margin-top:4px;}
     .deleteBtn:hover {background:#cc0000;}
-    .timestamp {font-size:11px;color:#ddd;position:absolute;bottom:4px;right:8px;}
   </style>
 </head>
 <body>
@@ -121,6 +120,23 @@ function loadUsers() {
 
 loadUsers();
 
+/* ================== LISTEN FOR NEW USER MESSAGES (GLOBAL) ================== */
+// This makes sure the admin gets email notifications even if no chat is open
+db.ref("chats").on("child_added", snap => {
+  const chatId = snap.key;
+  const chatData = snap.val();
+  if (!chatData || !chatData.email) return;
+
+  // Listen for new messages inside each chat
+  db.ref(`chats/${chatId}/messages`).on("child_added", msgSnap => {
+    const msg = msgSnap.val();
+    if (msg && msg.sender !== ADMIN_NAME) {
+      // Send email to admin when user sends message
+      sendEmailToAdmin(msg.sender, chatData.email, msg.text);
+    }
+  });
+});
+
 /* ================== OPEN CHAT ================== */
 function openChat(chatId, userName, userEmail) {
   currentChatId = chatId;
@@ -195,7 +211,7 @@ function sendEmailToAdmin(fromName, fromEmail, text) {
     to_email: ADMIN_EMAIL,
     from_name: fromName,
     from_email: fromEmail,
-    subject: `New message from ${fromName}`,
+    subject: `💬 New chat message from ${fromName}`,
     message: `New message from ${fromName} (${fromEmail}):\n\n${text}`
   };
   emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
