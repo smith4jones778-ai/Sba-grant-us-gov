@@ -201,33 +201,20 @@
     });
   }
 
-  // 📤 Send user message
-  function sendMessage() {
-    const input = document.getElementById("replyInput");
-    const text = input.value.trim();
-    if (!text) return;
-    input.value = "";
+  // ✅ Universal EmailJS Send Function
+function sendEmail(to, fromName, fromEmail, subject, message) {
+  const params = {
+    to_email: to,
+    from_name: fromName,
+    from_email: fromEmail,
+    subject: subject,
+    message: message
+  };
 
-    const msg = { sender: userName, text, timestamp: new Date().toISOString(), seen: false };
-    db.ref(`chats/${chatId}/messages`).push(msg);
-
-    // Send Email to Admin
-    sendEmail(adminEmail, userName, userEmail, text);
-  }
-
-  // ✉️ EmailJS Notify Admin
-  function sendEmail(to, fromName, fromEmail, message) {
-    const params = {
-      to_email: to,
-      from_name: fromName,
-      from_email: fromEmail,
-      message: `New message from ${fromName} (${fromEmail}):\n\n${message}`
-    };
-
-    emailjs.send("service_au8aho1", "template_7gfx3ty", params)
-      .then(() => console.log("✅ Email sent to admin"))
-      .catch(err => console.error("❌ Email failed", err));
-  }
+  emailjs.send("service_au8aho1", "template_7gfx3ty", params)
+    .then(() => console.log("✅ Email sent successfully"))
+    .catch(err => console.error("❌ Email failed:", err));
+}
 </script>
 </body>
 </html>
