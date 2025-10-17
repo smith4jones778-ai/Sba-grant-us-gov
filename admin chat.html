@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Admin Chat Panel — Agent</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+  <style>
+    :root{
+      --blue:#0078ff;
+      --muted:#f0f3f6;
+      --card:#fff;
+      --accent:#dceaff;
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Poppins",sans-serif;margin:0;height:100vh;background:var(--muted);display:flex;flex-direction:column}
+    header{background:var(--blue);color:#fff;padding:12px 16px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+    header .title{font-size:17px}
+    header .right{display:flex;align-items:center;gap:12px}
+    .container{flex:1;display:flex;overflow:hidden}
+    .sidebar{width:320px;background:var(--card);border-right:1px solid #e6e9ee;display:flex;flex-direction:column}
+    .sidebar .top{padding:12px}
+    .search{display:flex;gap:8px;padding:8px}
+    .search input{flex:1;padding:8px;border-radius:8px;border:1px solid #ddd}
+    .global-badge{background:#ff4d4f;color:#fff;padding:6px 9px;border-radius:999px;font-weight:700;font-size:13px;display:inline-block}
+    .user-list{overflow:auto;flex:1;padding:8px}
+    .user-card{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;border:1px solid transparent;margin-bottom:8px;cursor:pointer}
+    .user-card:hover{background:#fbfdff;border-color:#eef6ff}
+    .user-left{display:flex;gap:10px;align-items:center}
+    .avatar{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#e6f0ff,#ffffff);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--blue)}
+    .user-meta{display:flex;flex-direction:column}
+    .username{font-weight:700}
+    .email{font-size:12px;color:#666}
+    .user-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+    .unread{background:var(--blue);color:#fff;padding:6px 8px;border-radius:999px;font-size:12px;font-weight:700;min-width:36px;text-align:center}
+    .time{font-size:12px;color:#888}
+    /* main area */
+    .main{flex:1;display:flex;flex-direction:column}
+    .chat-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--card);border-bottom:1px solid #eef0f3}
+    .chat-header .title{font-weight:700}
+    .actions{display:flex;gap:10px;align-items:center}
+    .btn{background:var(--blue);color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
+    .danger{background:#ff4d4f}
+    .messages{flex:1;padding:18px;overflow:auto;background:linear-gradient(180deg,#f7fbff, #eef6ff)}
+    .msg-row{display:flex;margin-bottom:10px;max-width:75%}
+    .msg-row.sent{margin-left:auto;flex-direction:row-reverse}
+    .bubble{padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.2;box-shadow:0 2px 6px rgba(16,24,40,0.04)}
+    .bubble.sent{background:var(--blue);color:#fff;border-bottom-right-radius:4px}
+    .bubble.received{background:#fff;color:#111;border-bottom-left-radius:4px}
+    .msg-meta{font-size:11px;color:#666;margin-top:6px}
+    .composer{display:flex;padding:12px;border-top:1px solid #eef0f3;background:var(--card)}
+    .composer textarea{flex:1;padding:10px;border-radius:10px;border:1px solid #dfe7f5;min-height:46px;resize:none;font-family:inherit}
+    .composer .controls{display:flex;gap:8px;margin-left:8px}
+    .small{font-size:12px;color:#666}
+    .empty{padding:28px;text-align:center;color:#666}
+    .message-actions{display:flex;gap:6px;align-items:center}
+    .icon-btn{background:transparent;border:1px solid #e6e9ee;padding:6px;border-radius:8px;cursor:pointer}
+    /* responsive */
+    @media(max-width:880px){.sidebar{width:100%;height:260px;order:2}.main{order:1}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">Admin Chat Panel — Agent</div>
+    <div class="right">
+      <div class="small">Signed in as <strong>Agent</strong></div>
+      <div id="globalUnread" class="global-badge" title="Total unread" style="display:none">0</div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Sidebar: users -->
+    <aside class="sidebar" aria-label="Users">
+      <div class="top">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-weight:700">Users</div>
+          <div class="small" id="totalUsers">0</div>
+        </div>
+
+        <div class="search" style="margin-top:8px">
+          <input id="searchBox" placeholder="Search users by name or email" />
+          <button class="icon-btn" id="refreshBtn" title="Refresh list">⟳</button>
+        </div>
+      </div>
+
+      <div class="user-list" id="chatList">
+        <!-- user cards inserted here -->
+      </div>
+    </aside>
+
+    <!-- Main chat area -->
+    <main class="main">
+      <div class="chat-header">
+        <div>
+          <div class="title" id="chatHeader">Select a user to open chat</div>
+          <div class="small" id="chatSub">Live messages will appear here</div>
+        </div>
+
+        <div class="actions">
+          <button id="deleteChatBtn" class="btn danger" style="display:none">Delete Chat</button>
+          <button id="deleteMsgBtn" class="btn" style="display:none">Delete Message</button>
+        </div>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="empty" id="emptyNotice">No chat selected — open a user from the left</div>
+      </div>
+
+      <div class="composer">
+        <textarea id="replyInput" placeholder="Type reply to user..." aria-label="Reply"></textarea>
+        <div class="controls">
+          <button id="sendBtn" class="btn">Send</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <audio id="notifySound" src="https://assets.mixkit.co/active_storage/sfx/2212/2212-preview.mp3" preload="auto"></audio>
+
+<script>
+/* =========================
+   CONFIGURATION (edit only here)
+   ========================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBK5UM0n8-GLvleW7l6B8Hi-_WuC64QA4U",
+  authDomain: "scores-b25a7.firebaseapp.com",
+  projectId: "scores-b25a7",
+  storageBucket: "scores-b25a7.appspot.com",
+  messagingSenderId: "1001957936318",
+  appId: "1:1001957936318:web:43934942ee87654fd8e2ef"
+};
+const EMAILJS_SERVICE = "service_au8aho1";
+const EMAILJS_TEMPLATE = "template_7gfx3ty";
+const EMAILJS_PUBLIC_KEY = "NH7GD7-O8VKuKcfab";
+
+const ADMIN_NAME = "Agent";
+const ADMIN_EMAIL = "smith4778@gmail.com";
+/* ========================= */
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// init emailjs
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+// DOM refs
+const chatListEl = document.getElementById('chatList');
+const chatHeaderEl = document.getElementById('chatHeader');
+const chatSubEl = document.getElementById('chatSub');
+const messagesEl = document.getElementById('messages');
+const replyInput = document.getElementById('replyInput');
+const sendBtn = document.getElementById('sendBtn');
+const deleteChatBtn = document.getElementById('deleteChatBtn');
+const deleteMsgBtn = document.getElementById('deleteMsgBtn');
+const notifySound = document.getElementById('notifySound');
+const globalUnreadEl = document.getElementById('globalUnread');
+const totalUsersEl = document.getElementById('totalUsers');
+const searchBox = document.getElementById('searchBox');
+const refreshBtn = document.getElementById('refreshBtn');
+const emptyNotice = document.getElementById('emptyNotice');
+
+let currentChatId = null;        // selected chat id (key)
+let currentChatMeta = null;      // {username, email, ...}
+let messagesListenerRef = null;
+let lastMessageKey = null;
+let selectedMessageKey = null;   // for delete message action
+
+// Utility: sanitize keys
+function toKey(email){ return email.replace(/\W/g,'_'); }
+
+// Format time
+function fmtTime(ts){
+  try{
+    const d = new Date(ts);
+    return d.toLocaleString();
+  }catch(e){ return ts; }
+}
+
+/* ---------------------------
+   LISTEN FOR ALL CHATS (sidebar)
+   --------------------------- */
+function loadUsers(filter=""){
+  db.ref('chats').off('value', onChatsValue);
+  db.ref('chats').on('value', onChatsValue);
+}
+
+function onChatsValue(snapshot){
+  const users = [];
+  snapshot.forEach(childSnap => {
+    const id = childSnap.key;
+    const data = childSnap.val() || {};
+    users.push({ id, ...data });
+  });
+
+  renderUserList(users);
+}
+
+function renderUserList(users){
+  // filter from search
+  const q = (searchBox.value || '').toLowerCase().trim();
+  const filtered = users.filter(u => {
+    if(!q) return true;
+    return (u.username || '').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q);
+  });
+
+  chatListEl.innerHTML = '';
+  if(filtered.length === 0){
+    chatListEl.innerHTML = `<div style="padding:14px;color:#666">No chats yet.</div>`;
+  }
+
+  let totalUnread = 0;
+
+  // Sort by last message timestamp (desc)
+  filtered.sort((a,b)=>{
+    const ta = a.lastMessageTimestamp || 0;
+    const tb = b.lastMessageTimestamp || 0;
+    return tb - ta;
+  });
+
+  filtered.forEach(u => {
+    const card = document.createElement('div');
+    card.className = 'user-card';
+    card.dataset.chatId = u.id;
+
+    const left = document.createElement('div'); left.className = 'user-left';
+    const avatar = document.createElement('div'); avatar.className = 'avatar';
+    avatar.textContent = (u.username||'?')[0] && (u.username||'?')[0].toUpperCase();
+    const meta = document.createElement('div'); meta.className = 'user-meta';
+    const name = document.createElement('div'); name.className = 'username'; name.textContent = u.username || '(no name)';
+    const email = document.createElement('div'); email.className = 'email'; email.textContent = u.email || '';
+    meta.appendChild(name); meta.appendChild(email);
+    left.appendChild(avatar); left.appendChild(meta);
+
+    const right = document.createElement('div'); right.className = 'user-right';
+    const unread = document.createElement('div'); unread.className = 'unread';
+    const unreadCount = (u.unreadCount) ? u.unreadCount : 0;
+    unread.textContent = unreadCount;
+    unread.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+
+    const time = document.createElement('div'); time.className = 'time';
+    time.textContent = u.lastMessageTimestamp ? fmtTime(u.lastMessageTimestamp) : '';
+
+    right.appendChild(unread); right.appendChild(time);
+
+    card.appendChild(left); card.appendChild(right);
+    card.onclick = () => openChat(u.id, u);
+
+    chatListEl.appendChild(card);
+
+    totalUnread += unreadCount;
+  });
+
+  // show global badge if unread > 0
+  if(totalUnread > 0){
+    globalUnreadEl.style.display = 'inline-block';
+    globalUnreadEl.textContent = totalUnread;
+  } else {
+    globalUnreadEl.style.display = 'none';
+  }
+
+  totalUsersEl.textContent = filtered.length;
+}
+
+/* ---------------------------
+   OPEN CHAT (main area)
+   --------------------------- */
+function openChat(chatId, chatMeta){
+  // clear previous listener
+  if(messagesListenerRef) db.ref(messagesListenerRef).off();
+
+  currentChatId = chatId;
+  currentChatMeta = chatMeta;
+  selectedMessageKey = null;
+
+  // UI updates
+  chatHeaderEl.textContent = `${chatMeta.username || '(no name)'} — ${chatMeta.email || ''}`;
+  chatSubEl.textContent = `Chat ID: ${chatId}`;
+  deleteChatBtn.style.display = 'inline-block';
+  deleteMsgBtn.style.display = 'none';
+  emptyNotice.style.display = 'none';
+  messagesEl.innerHTML = '';
+
+  // messages path
+  const messagesPath = `chats/${chatId}/messages`;
+  messagesListenerRef = messagesPath;
+
+  // load messages (child_added)
+  db.ref(messagesPath).orderByChild('timestamp').on('child_added', function(snap){
+    const key = snap.key;
+    const msg = snap.val();
+    appendMessage(key, msg);
+    // auto-mark seen if it's from user and not seen
+    if(msg.sender !== ADMIN_NAME && !msg.seen){
+      db.ref(`${messagesPath}/${key}`).update({ seen: true }).catch(console.error);
+    }
+    // play sound when message is from user
+    if(msg.sender !== ADMIN_NAME){
+      notifySound.currentTime = 0;
+      notifySound.play().catch(()=>{});
+    }
+  });
+
+  // also listen for changes to messages for handling deletions or updates
+  db.ref(messagesPath).on('child_changed', function(snap){
+    // re-render message if changed (seen flag)
+    const key = snap.key;
+    const msg = snap.val();
+    const el = document.querySelector(`[data-msg-key="${key}"]`);
+    if(el){
+      const meta = el.querySelector('.msg-meta');
+      if(meta) meta.textContent = `${fmtTime(msg.timestamp)} ${msg.seen ? ' ✅' : ''}`;
+      if(msg.deleted){
+        el.querySelector('.bubble').textContent = '[message deleted]';
+      }
+    }
+  });
+
+  // clear unreadCount on chat meta (so sidebar updates)
+  db.ref(`chats/${chatId}`).update({ unreadCount: 0 }).catch(console.error);
+}
+
+/* Append message DOM */
+function appendMessage(key, msg){
+  // hide empty notice
+  emptyNotice.style.display = 'none';
+
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + (msg.sender === ADMIN_NAME ? 'sent' : 'received');
+  row.dataset.msgKey = key;
+  row.setAttribute('data-msg-key', key);
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble ' + (msg.sender === ADMIN_NAME ? 'sent' : 'received');
+  bubble.innerHTML = `<strong style="display:block">${msg.sender}</strong>${escapeHtml(msg.text)}`;
+
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+  meta.textContent = `${fmtTime(msg.timestamp)} ${msg.seen ? ' ✅' : ''}`;
+  bubble.appendChild(meta);
+
+  row.appendChild(bubble);
+
+  // message action: click to select message (for delete)
+  row.onclick = (e) => {
+    // ignore clicks on scrolling
+    e.stopPropagation();
+    // highlight selected
+    document.querySelectorAll('.msg-row').forEach(r => r.style.outline = 'none');
+    row.style.outline = '2px solid rgba(0,120,255,0.12)';
+    selectedMessageKey = key;
+    deleteMsgBtn.style.display = 'inline-block';
+  };
+
+  messagesEl.appendChild(row);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+/* ---------------------------
+   SEND REPLY
+   --------------------------- */
+sendBtn.addEventListener('click', sendReply);
+replyInput.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    sendReply();
+  }
+});
+
+function sendReply(){
+  const text = (replyInput.value || '').trim();
+  if(!text || !currentChatId) return;
+  const msgObj = {
+    sender: ADMIN_NAME,
+    text: text,
+    timestamp: new Date().toISOString(),
+    seen: false
+  };
+  const ref = db.ref(`chats/${currentChatId}/messages`).push();
+  ref.set(msgObj).then(()=>{
+    replyInput.value = '';
+    // update parent chat meta last message time
+    db.ref(`chats/${currentChatId}`).update({ lastMessageTimestamp: Date.now() }).catch(console.error);
+    // send email to user
+    db.ref(`chats/${currentChatId}`).once('value').then(snap=>{
+      const meta = snap.val() || {};
+      if(meta.email){
+        sendEmailToUser(meta.email, `Reply from ${ADMIN_NAME}`, meta.username || ADMIN_NAME, text);
+      }
+    });
+  }).catch(console.error);
+}
+
+/* ---------------------------
+   DELETE MESSAGE
+   --------------------------- */
+deleteMsgBtn.addEventListener('click', function(){
+  if(!selectedMessageKey || !currentChatId) return alert('Select a message to delete first');
+  if(!confirm('Delete selected message? This cannot be undone.')) return;
+  db.ref(`chats/${currentChatId}/messages/${selectedMessageKey}`).update({ deleted: true, text: '[deleted]' })
+    .then(()=> {
+      // locally update UI
+      const el = document.querySelector(`[data-msg-key="${selectedMessageKey}"]`);
+      if(el){
+        el.querySelector('.bubble').textContent = '[message deleted]';
+      }
+      selectedMessageKey = null;
+      deleteMsgBtn.style.display = 'none';
+    }).catch(console.error);
+});
+
+/* ---------------------------
+   DELETE ENTIRE CHAT
+   --------------------------- */
+deleteChatBtn.addEventListener('click', function(){
+  if(!currentChatId) return;
+  if(!confirm('Delete entire chat with this user? This will remove all messages and user entry.')) return;
+  db.ref(`chats/${currentChatId}`).remove().then(()=>{
+    // clear view
+    messagesEl.innerHTML = '';
+    chatHeaderEl.textContent = 'Select a user to open chat';
+    chatSubEl.textContent = 'Live messages will appear here';
+    deleteChatBtn.style.display = 'none';
+    deleteMsgBtn.style.display = 'none';
+    currentChatId = null;
+    selectedMessageKey = null;
+    emptyNotice.style.display = 'block';
+  }).catch(console.error);
+});
+
+/* ---------------------------
+   EMAIL FUNCTIONS (EmailJS)
+   Template expects variables: to_email, from_name, from_email, message
+   --------------------------- */
+function sendEmailToUser(to, subject, fromName, messageText){
+  const params = {
+    to_email: to,
+    from_name: fromName || ADMIN_NAME,
+    from_email: ADMIN_EMAIL,
+    subject: subject,
+    message: messageText
+  };
+  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
+    .then(() => console.log('Email sent to user:', to))
+    .catch(err => console.error('EmailJS error:', err));
+}
+
+/* send admin notification when a user message arrives
+   (we call this when loading messages in openChat)
+*/
+function sendEmailToAdmin(fromName, fromEmail, text){
+  const params = {
+    to_email: ADMIN_EMAIL,
+    from_name: fromName,
+    from_email: fromEmail,
+    subject: `New message from ${fromName}`,
+    message: `New message from ${fromName} (${fromEmail}):\n\n${text}`
+  };
+  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
+    .then(()=> console.log('Notified admin by email'))
+    .catch(err => console.error('EmailJS admin notify error', err));
+}
+
+/* ---------------------------
+   WATCH for new user messages (global listener)
+   We notify admin & update unread counts.
+   --------------------------- */
+db.ref('chats').on('child_added', childSnap => {
+  // ensure unreadCount property exists
+  const id = childSnap.key;
+  const data = childSnap.val() || {};
+  if(typeof data.unreadCount === 'undefined') {
+    // compute unread by scanning messages
+    db.ref(`chats/${id}/messages`).orderByChild('seen').equalTo(false).once('value').then(snap=>{
+      const unread = snap.numChildren();
+      db.ref(`chats/${id}`).update({ unreadCount: unread }).catch(()=>{});
+    }).catch(()=>{});
+  }
+});
+
+db.ref('chats').on('child_changed', childSnap=>{
+  // Update sidebar immediately
+  // We'll re-render all via onChatsValue handler already attached
+});
+
+/* Also listen for any NEW message created anywhere to update unread counters and optionally notify admin */
+db.ref('chats').on('child_changed', function(childSnap){
+  const id = childSnap.key;
+  const data = childSnap.val() || {};
+  // If there is unreadCount property, leave it, else compute
+  // We'll keep unreadCount accurate by listening directly on messages
+});
+
+/* For each chat, watch messages added to update unread count & notify admin */
+function attachPerChatMessageWatcher(){
+  db.ref('chats').once('value', snap=>{
+    snap.forEach(chatSnap=>{
+      const id = chatSnap.key;
+      const messagesPath = `chats/${id}/messages`;
+      db.ref(messagesPath).on('child_added', msgSnap=>{
+        const msg = msgSnap.val();
+        if(!msg) return;
+        // If message is from user (not admin), increase unreadCount and notify admin
+        if(msg.sender !== ADMIN_NAME){
+          // increment unreadCount atomically
+          const cntRef = db.ref(`chats/${id}/unreadCount`);
+          cntRef.transaction(current => (current||0)+1).catch(()=>{});
+          // send email to admin
+          // but avoid flooding: only send if not flagged as 'adminNotified' for this message (we don't store that)
+          // to keep it simple, send a notification email for each new user message
+          sendEmailToAdmin(msg.sender, chatSnap.val().email || 'unknown', msg.text);
+        }
+      });
+    });
+  });
+}
+
+// attach watchers once at startup
+attachPerChatMessageWatcher();
+
+/* ---------------------------
+   Search & refresh
+   --------------------------- */
+searchBox.addEventListener('input', () => {
+  // rerender will be triggered by onChatsValue; but to be safe call loadUsers
+  db.ref('chats').once('value').then(snap => {
+    const users = [];
+    snap.forEach(child => users.push({ id: child.key, ...child.val() }));
+    renderUserList(users);
+  });
+});
+refreshBtn.addEventListener('click', ()=> loadUsers());
+
+/* ---------------------------
+   Helper: escape HTML
+   --------------------------- */
+function escapeHtml(unsafe) {
+  if(unsafe === undefined || unsafe === null) return '';
+  return String(unsafe)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'",'&#039;')
+    .replaceAll('\n','<br>');
+}
+
+/* =========================
+   INITIAL LOAD
+   ========================= */
+loadUsers();
+console.log('Admin panel ready.');
+
+// Optional: periodically refresh unread counts for accuracy
+setInterval(()=>{
+  db.ref('chats').once('value').then(snap=>{
+    const users = [];
+    snap.forEach(child=> users.push({id: child.key, ...child.val()}));
+    renderUserList(users);
+  });
+}, 15000);
+
+</script>
+</body>
+</html>

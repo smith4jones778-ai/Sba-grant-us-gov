@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat with Agent</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <style>
+    body {
+      font-family: Poppins, sans-serif;
+      background: #f0f3f6;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background: #0078ff;
+      color: white;
+      padding: 12px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 18px;
+    }
+    #loginForm {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99;
+    }
+    #loginBox {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      width: 300px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    #loginBox input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    #chatBox {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+    }
+    .messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: #eef3f8;
+      display: flex;
+      flex-direction: column;
+    }
+    .msg {
+      margin: 6px 0;
+      padding: 10px 14px;
+      border-radius: 16px;
+      max-width: 70%;
+      font-size: 15px;
+      word-wrap: break-word;
+    }
+    .sent {
+      background: #0078ff;
+      color: white;
+      align-self: flex-end;
+    }
+    .received {
+      background: #e9ecef;
+      align-self: flex-start;
+    }
+    .meta {
+      font-size: 11px;
+      color: #555;
+      margin-top: 3px;
+    }
+    .input-area {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      background: white;
+    }
+    textarea {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      resize: none;
+      font-family: inherit;
+    }
+    button {
+      margin-left: 8px;
+      background: #0078ff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 16px;
+      cursor: pointer;
+    }
+    button:hover { background: #005fcc; }
+  </style>
+</head>
+<body>
+  <header>Chat with Agent</header>
+
+  <div id="loginForm">
+    <div id="loginBox">
+      <h2>Start Chat</h2>
+      <input type="text" id="userName" placeholder="Your Name"><br>
+      <input type="email" id="userEmail" placeholder="Your Email"><br>
+      <button onclick="startChat()">Start</button>
+    </div>
+  </div>
+
+  <div id="chatBox">
+    <div class="messages" id="messages"></div>
+    <div class="input-area">
+      <textarea id="replyInput" placeholder="Type your message..."></textarea>
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <audio id="notifySound" src="https://assets.mixkit.co/active_storage/sfx/2212/2212-preview.mp3"></audio>
+
+<script>
+  // 🔥 Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyBK5UM0n8-GLvleW7l6B8Hi-_WuC64QA4U",
+    authDomain: "scores-b25a7.firebaseapp.com",
+    projectId: "scores-b25a7",
+    storageBucket: "scores-b25a7.appspot.com",
+    messagingSenderId: "1001957936318",
+    appId: "1:1001957936318:web:43934942ee87654fd8e2ef"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // 📧 EmailJS Setup
+  emailjs.init("NH7GD7-O8VKuKcfab");
+
+  const adminName = "Agent";
+  const adminEmail = "smith4778@gmail.com";
+  let userName = "", userEmail = "", chatId = "";
+
+  // Restore saved session if available
+  window.onload = () => {
+    const savedName = localStorage.getItem("chatName");
+    const savedEmail = localStorage.getItem("chatEmail");
+    if (savedName && savedEmail) {
+      userName = savedName;
+      userEmail = savedEmail;
+      chatId = userEmail.replace(/\W/g, "_");
+      document.getElementById("loginForm").style.display = "none";
+      document.getElementById("chatBox").style.display = "flex";
+      listenToMessages();
+    }
+  };
+
+  function startChat() {
+    userName = document.getElementById("userName").value.trim();
+    userEmail = document.getElementById("userEmail").value.trim();
+    if (!userName || !userEmail) return alert("Enter your name and email");
+
+    chatId = userEmail.replace(/\W/g, "_");
+    localStorage.setItem("chatName", userName);
+    localStorage.setItem("chatEmail", userEmail);
+
+    db.ref(`chats/${chatId}`).update({ username: userName, email: userEmail });
+
+    document.getElementById("loginForm").style.display = "none";
+    document.getElementById("chatBox").style.display = "flex";
+    listenToMessages();
+  }
+
+  // 🔁 Listen for new messages in real-time
+  function listenToMessages() {
+    const messagesDiv = document.getElementById("messages");
+    messagesDiv.innerHTML = "";
+    db.ref(`chats/${chatId}/messages`).on("child_added", snap => {
+      const msg = snap.val();
+      const div = document.createElement("div");
+      div.classList.add("msg", msg.sender === userName ? "sent" : "received");
+      div.innerHTML = `<b>${msg.sender}</b><br>${msg.text}<div class="meta">${new Date(msg.timestamp).toLocaleString()}${msg.seen ? " ✅" : ""}</div>`;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      // Play sound when admin replies
+      if (msg.sender === adminName) {
+        db.ref(`chats/${chatId}/messages/${snap.key}`).update({ seen: true });
+        document.getElementById("notifySound").play();
+      }
+    });
+  }
+
+  // 📤 Send user message
+  function sendMessage() {
+    const input = document.getElementById("replyInput");
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+
+    const msg = { sender: userName, text, timestamp: new Date().toISOString(), seen: false };
+    db.ref(`chats/${chatId}/messages`).push(msg);
+
+    // Send Email to Admin
+    sendEmail(adminEmail, userName, userEmail, text);
+  }
+
+  // ✉️ EmailJS Notify Admin
+  function sendEmail(to, fromName, fromEmail, message) {
+    const params = {
+      to_email: to,
+      from_name: fromName,
+      from_email: fromEmail,
+      message: `New message from ${fromName} (${fromEmail}):\n\n${message}`
+    };
+
+    emailjs.send("service_au8aho1", "template_7gfx3ty", params)
+      .then(() => console.log("✅ Email sent to admin"))
+      .catch(err => console.error("❌ Email failed", err));
+  }
+</script>
+</body>
+</html>
