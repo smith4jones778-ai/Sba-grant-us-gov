@@ -27,7 +27,6 @@
     button:hover {background:#005fcc;}
     .deleteBtn {background:#ff4444;margin-top:4px;}
     .deleteBtn:hover {background:#cc0000;}
-    .timestamp {font-size:11px;color:#ddd;position:absolute;bottom:4px;right:8px;}
   </style>
 </head>
 <body>
@@ -74,6 +73,7 @@ const ADMIN_EMAIL = "smith4jones778@gmail.com";
 let currentChatId = "";
 let currentUserEmail = "";
 let currentUserName = "";
+let notifiedMessages = {}; // ✅ Prevent duplicate email alerts
 
 /* ================== LOAD USER LIST ================== */
 function loadUsers() {
@@ -85,7 +85,6 @@ function loadUsers() {
       return;
     }
 
-    // Sort chats by latest activity
     const chats = [];
     snapshot.forEach(child => {
       const val = child.val();
@@ -139,10 +138,16 @@ function openChat(chatId, userName, userEmail) {
     messagesDiv.appendChild(div);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-    // Play sound and mark as seen
+    // ✅ FIXED EMAILJS ADMIN NOTIFY + SOUND
     if (msg.sender !== ADMIN_NAME) {
       document.getElementById("notifySound").play().catch(()=>{});
       db.ref(`chats/${chatId}/messages/${snap.key}`).update({ seen: true });
+
+      // Send email to admin ONCE per new message
+      if (!notifiedMessages[snap.key]) {
+        sendEmailToAdmin(msg.sender, userEmail, msg.text);
+        notifiedMessages[snap.key] = true;
+      }
     }
   });
 }
@@ -195,7 +200,7 @@ function sendEmailToAdmin(fromName, fromEmail, text) {
     to_email: ADMIN_EMAIL,
     from_name: fromName,
     from_email: fromEmail,
-    subject: `New message from ${fromName}`,
+    subject: `💬 New message from ${fromName}`,
     message: `New message from ${fromName} (${fromEmail}):\n\n${text}`
   };
   emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
