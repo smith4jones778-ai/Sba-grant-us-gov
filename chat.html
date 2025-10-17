@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Chat with Agent</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-
+  <meta charset="UTF-8">
+  <title>Live Chat | Agent & Users</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -13,260 +13,230 @@
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
   <style>
-    :root {--blue:#0078ff;--bg:#f0f3f6;--card:#fff}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);height:100vh;display:flex;flex-direction:column}
-    header{background:var(--blue);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
-    header .title{font-weight:700}
-    header .badge{background:#ff4d4f;padding:6px 10px;border-radius:999px;font-weight:700;display:none}
-    #loginOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:999;}
-    #loginBox{background:var(--card);padding:24px;border-radius:12px;width:320px;text-align:center;box-shadow:0 8px 30px rgba(15,23,42,0.12)}
-    #loginBox input{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ddd}
-    main{flex:1;display:flex;flex-direction:column}
-    .messages{flex:1;padding:18px;overflow:auto;background:linear-gradient(180deg,#f7fbff,#eef6ff)}
-    .msg{max-width:75%;padding:10px 14px;border-radius:12px;margin:8px 0;word-wrap:break-word}
-    .msg.sent{margin-left:auto;background:var(--blue);color:#fff}
-    .msg.received{background:#fff;border:1px solid #e6ecf8}
-    .meta{font-size:11px;color:#666;margin-top:6px}
-    .composer{display:flex;padding:12px;border-top:1px solid #e8eef9;background:var(--card)}
-    .composer textarea{flex:1;padding:10px;border-radius:10px;border:1px solid #dfe7f5;min-height:48px;resize:none}
-    .composer button{margin-left:8px;padding:10px 14px;border-radius:10px;border:none;background:var(--blue);color:#fff;cursor:pointer}
-    .small{font-size:12px;color:#666}
-    @media(max-width:600px){#loginBox{width:92%}}
+    body {
+      font-family: "Poppins", sans-serif;
+      margin: 0; height: 100vh;
+      display: flex; flex-direction: column;
+      background: #f0f3f6;
+    }
+    header {
+      background: #0078ff; color: white;
+      padding: 12px; text-align: center; font-size: 20px; font-weight: 600;
+    }
+    .container { flex: 1; display: flex; height: calc(100vh - 50px); }
+    .sidebar {
+      width: 250px; background: white; border-right: 1px solid #ddd; overflow-y: auto;
+    }
+    .sidebar h2 { background: #0078ff; color: white; margin: 0; padding: 12px; text-align: center; }
+    .chat-list div {
+      padding: 12px; border-bottom: 1px solid #eee;
+      cursor: pointer; transition: 0.3s;
+    }
+    .chat-list div:hover { background: #f4f8ff; }
+    .chat-list .active { background: #dceaff; }
+    .main {
+      flex: 1; display: flex; flex-direction: column;
+    }
+    .header { background: #0078ff; color: white; padding: 12px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+    .badge {
+      background: red; color: white; font-size: 12px; border-radius: 50%; padding: 4px 8px; margin-left: 6px;
+      display: none;
+    }
+    .messages {
+      flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column;
+      background: #eef3f8;
+    }
+    .msg { margin: 6px 0; padding: 10px 14px; border-radius: 16px; max-width: 70%; font-size: 15px; }
+    .sent { background: #0078ff; color: white; align-self: flex-end; }
+    .received { background: #e9ecef; align-self: flex-start; }
+    .input-area { display: flex; padding: 10px; border-top: 1px solid #ddd; background: white; }
+    input, textarea {
+      flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #ccc; resize: none; font-family: inherit;
+    }
+    button {
+      margin-left: 8px; background: #0078ff; color: white;
+      border: none; border-radius: 6px; padding: 10px 16px; cursor: pointer;
+    }
+    #loginForm {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center; z-index: 9999;
+    }
+    #loginBox {
+      background: white; padding: 30px; border-radius: 12px; width: 320px; text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    #loginBox input {
+      width: 90%; padding: 10px; margin: 8px 0;
+      border-radius: 6px; border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
-  <header>
-    <div class="title">Chat with Agent</div>
-    <div>
-      <span id="unreadBadge" class="badge">1</span>
-      <button id="logoutBtn" style="background:none;border:none;color:#fff;cursor:pointer;display:none;">Logout</button>
-    </div>
-  </header>
 
-  <!-- Login overlay -->
-  <div id="loginOverlay">
-    <div id="loginBox">
-      <h2 style="margin:0 0 8px 0">Start Chat</h2>
-      <input id="userName" type="text" placeholder="Your name" />
-      <input id="userEmail" type="email" placeholder="Your email" />
-      <div style="display:flex;gap:8px;margin-top:10px;justify-content:center">
-        <button id="startBtn" style="padding:10px 14px;border-radius:8px;border:none;background:var(--blue);color:#fff;cursor:pointer">Start</button>
-      </div>
-      <div style="margin-top:10px" class="small">Agent will reply to your email</div>
-    </div>
+<header>Agent & User Live Chat</header>
+
+<!-- Login Prompt -->
+<div id="loginForm">
+  <div id="loginBox">
+    <h2>Enter Your Details</h2>
+    <input type="text" id="userName" placeholder="Your Name"><br>
+    <input type="email" id="userEmail" placeholder="Your Email"><br>
+    <button onclick="startChat()">Start Chat</button>
+  </div>
+</div>
+
+<div class="container" style="display:none;" id="chatContainer">
+  <div class="sidebar" id="adminSidebar" style="display:none;">
+    <h2>Chats <span id="badge" class="badge">0</span></h2>
+    <div class="chat-list" id="chatList"></div>
   </div>
 
-  <main>
+  <div class="main">
+    <div class="header" id="chatHeader">Select or Start a Chat</div>
     <div class="messages" id="messages"></div>
-
-    <div class="composer">
-      <textarea id="messageInput" placeholder="Type your message..." rows="2"></textarea>
-      <button id="sendBtn">Send</button>
+    <div class="input-area">
+      <textarea id="replyInput" rows="1" placeholder="Type a message..."></textarea>
+      <button onclick="sendMessage()">Send</button>
     </div>
-  </main>
+  </div>
+</div>
 
-  <audio id="notifySound" src="https://assets.mixkit.co/active_storage/sfx/2212/2212-preview.mp3" preload="auto"></audio>
+<audio id="notifySound" src="https://assets.mixkit.co/active_storage/sfx/2212/2212-preview.mp3"></audio>
 
 <script>
-/* ================= CONFIG ================= */
-const firebaseConfig = {
-  apiKey: "AIzaSyB4DMYZJHWgbRUZV-uamOy7TpxLM1sGYPY",
-  authDomain: "chats-afcff.firebaseapp.com",
-  projectId: "chats-afcff",
-  storageBucket: "chats-afcff.firebasestorage.app",
-  messagingSenderId: "764250889947",
-  appId: "1:764250889947:web:2c843497ce389edf5876fe"
-};
-/* ================== EMAILJS CONFIG ================== */
-const EMAILJS_SERVICE = "service_7servqq";
-const EMAILJS_TEMPLATE = "template_abw3a7q";
-const EMAILJS_PUBLIC_KEY = "ayBtD4ucWPOYC7x47";
-const ADMIN_NAME = "Agent";
-const ADMIN_EMAIL = "smith4jones778@gmail.com";
-/* ========================================== */
+  // Initialize Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyBK5UM0n8-GLvleW7l6B8Hi-_WuC64QA4U",
+    authDomain: "scores-b25a7.firebaseapp.com",
+    projectId: "scores-b25a7",
+    storageBucket: "scores-b25a7.appspot.com",
+    messagingSenderId: "1001957936318",
+    appId: "1:1001957936318:web:43934942ee87654fd8e2ef",
+    measurementId: "G-3QES2VR31T"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-emailjs.init(EMAILJS_PUBLIC_KEY);
+  // Initialize EmailJS
+  emailjs.init("NH7GD7-O8VKuKcfab");
 
-/* DOM references */
-const loginOverlay = document.getElementById('loginOverlay');
-const startBtn = document.getElementById('startBtn');
-const userNameInput = document.getElementById('userName');
-const userEmailInput = document.getElementById('userEmail');
-const messagesEl = document.getElementById('messages');
-const messageInput = document.getElementById('messageInput');
-const sendBtn = document.getElementById('sendBtn');
-const notifySound = document.getElementById('notifySound');
-const unreadBadge = document.getElementById('unreadBadge');
-const logoutBtn = document.getElementById('logoutBtn');
+  const adminName = "Agent";
+  const adminEmail = "smith4jones778@gmail.com";
+  let userName = "", userEmail = "", currentChat = null, isAdmin = false;
 
-let userName = '';
-let userEmail = '';
-let chatId = '';
-let unreadCount = 0;
+  function startChat() {
+    const name = document.getElementById("userName").value.trim();
+    const email = document.getElementById("userEmail").value.trim();
+    if (!name || !email) return alert("Enter your name and email.");
 
-/* Auto-login if user already entered before */
-window.addEventListener('load', () => {
-  const savedName = localStorage.getItem('chatName');
-  const savedEmail = localStorage.getItem('chatEmail');
-  if (savedName && savedEmail) {
-    userName = savedName;
-    userEmail = savedEmail;
-    chatId = userEmail.replace(/\W/g,'_');
-    loginOverlay.style.display = 'none';
-    logoutBtn.style.display = 'inline';
-    listenToMessages();
+    userName = name;
+    userEmail = email;
+    document.getElementById("loginForm").style.display = "none";
+    document.getElementById("chatContainer").style.display = "flex";
+
+    if (email === adminEmail) {
+      isAdmin = true;
+      document.getElementById("adminSidebar").style.display = "block";
+      loadChatList();
+    } else {
+      startUserChat();
+    }
   }
-});
 
-/* Start chat manually */
-startBtn.addEventListener('click', () => {
-  const name = userNameInput.value.trim();
-  const email = userEmailInput.value.trim();
-  if (!name || !email) return alert('Enter your name and email');
+  // --- USER SIDE CHAT ---
+  function startUserChat() {
+    const chatId = userEmail.replace(/\W/g, "_");
+    currentChat = chatId;
+    document.getElementById("chatHeader").textContent = "Chat with Agent";
+    db.ref(`chats/${chatId}`).update({ username: userName, email: userEmail });
 
-  userName = name;
-  userEmail = email;
-  chatId = userEmail.replace(/\W/g,'_');
+    db.ref(`chats/${chatId}/messages`).on("child_added", snap => {
+      const msg = snap.val();
+      showMessage(msg.sender === userName ? "sent" : "received", msg.sender, msg.text);
+      if (msg.sender === adminName) document.getElementById("notifySound").play();
+    });
+  }
 
-  localStorage.setItem('chatName', userName);
-  localStorage.setItem('chatEmail', userEmail);
+  // --- ADMIN SIDE CHAT LIST ---
+  function loadChatList() {
+    db.ref("chats").on("value", snap => {
+      const list = document.getElementById("chatList");
+      list.innerHTML = "";
+      let badgeCount = 0;
+      snap.forEach(child => {
+        const chat = child.val();
+        const div = document.createElement("div");
+        div.textContent = chat.username + " (" + chat.email + ")";
+        div.onclick = () => openChat(child.key, chat.username);
+        if (currentChat === child.key) div.classList.add("active");
+        list.appendChild(div);
+      });
+      document.getElementById("badge").style.display = badgeCount > 0 ? "inline-block" : "none";
+    });
+  }
 
-  db.ref(`chats/${chatId}`).update({
-    username: userName,
-    email: userEmail,
-    lastMessageTimestamp: Date.now()
-  });
+  // --- ADMIN OPEN CHAT ---
+  function openChat(id, username) {
+    currentChat = id;
+    document.getElementById("chatHeader").textContent = "Chat with " + username;
+    document.getElementById("messages").innerHTML = "";
 
-  loginOverlay.style.display = 'none';
-  logoutBtn.style.display = 'inline';
-  listenToMessages();
-});
-
-/* Logout */
-logoutBtn.addEventListener('click', () => {
-  localStorage.removeItem('chatName');
-  localStorage.removeItem('chatEmail');
-  location.reload();
-});
-
-/* Listen for messages */
-function listenToMessages(){
-  messagesEl.innerHTML = '';
-  unreadCount = 0;
-  updateUnreadBadge();
-
-  const path = `chats/${chatId}/messages`;
-  db.ref(path).off(); // Prevent duplicate listeners
-
-  db.ref(path).orderByChild('timestamp').on('child_added', snap => {
-    const key = snap.key;
-    const msg = snap.val();
-    renderMessage(key, msg);
-
-    if (msg.sender === ADMIN_NAME && !msg.seen) {
-      db.ref(`${path}/${key}`).update({ seen: true });
-      notifySound.currentTime = 0;
-      notifySound.play().catch(()=>{});
-      if (!document.hasFocus()) {
-        unreadCount++;
-        updateUnreadBadge();
+    db.ref(`chats/${id}/messages`).off();
+    db.ref(`chats/${id}/messages`).on("child_added", snap => {
+      const msg = snap.val();
+      showMessage(msg.sender === adminName ? "sent" : "received", msg.sender, msg.text);
+      if (msg.sender !== adminName) {
+        document.getElementById("notifySound").play();
+        sendEmail(adminEmail, `New message from ${msg.sender}`, msg.text);
       }
-    }
-  });
-
-  db.ref(path).on('child_changed', snap => {
-    const key = snap.key;
-    const msg = snap.val();
-    const el = document.querySelector(`[data-msg-key="${key}"]`);
-    if (el) {
-      el.innerHTML = messageHTML(msg);
-    }
-  });
-}
-
-/* Render message HTML */
-function messageHTML(msg){
-  return `<div class="msg ${msg.sender === userName ? 'sent' : 'received'}">
-    <strong>${escapeHtml(msg.sender)}</strong>
-    <div>${escapeHtml(msg.text)}</div>
-    <div class="meta">${new Date(msg.timestamp).toLocaleString()}${msg.seen ? ' ✅' : ''}</div>
-  </div>`;
-}
-
-function renderMessage(key, msg){
-  const row = document.createElement('div');
-  row.setAttribute('data-msg-key', key);
-  row.innerHTML = messageHTML(msg);
-  messagesEl.appendChild(row);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
-
-/* Send message */
-sendBtn.addEventListener('click', sendMessage);
-messageInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
+    });
   }
-});
 
-function sendMessage(){
-  const text = messageInput.value.trim();
-  if (!text) return;
-  const path = `chats/${chatId}/messages`;
-  const msg = {
-    sender: userName,
-    text,
-    timestamp: Date.now(),
-    seen: false
-  };
-  db.ref(path).push(msg).then(() => {
-    messageInput.value = '';
-    db.ref(`chats/${chatId}`).update({ lastMessageTimestamp: Date.now() });
-    sendEmailToAdmin(userName, userEmail, text);
-  });
-}
+  // --- SEND MESSAGE (Admin/User) ---
+  function sendMessage() {
+    const input = document.getElementById("replyInput");
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
 
-/* Notify admin via EmailJS */
-function sendEmailToAdmin(fromName, fromEmail, text){
-  const params = {
-    to_email: ADMIN_EMAIL,
-    from_name: fromName,
-    from_email: fromEmail,
-    subject: `New message from ${fromName}`,
-    message: `New message from ${fromName} (${fromEmail}):\n\n${text}`
-  };
-  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
-    .then(() => console.log('✅ Admin notified via EmailJS'))
-    .catch(err => console.error('❌ EmailJS error', err));
-}
+    const msg = { sender: isAdmin ? adminName : userName, text, timestamp: new Date().toISOString() };
 
-/* Unread badge */
-function updateUnreadBadge(){
-  unreadBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
-  unreadBadge.textContent = unreadCount;
-}
+    if (isAdmin) {
+      db.ref(`chats/${currentChat}/messages`).push(msg);
+      notifyUser(currentChat, text);
+    } else {
+      db.ref(`chats/${currentChat}/messages`).push(msg);
+      sendEmail(adminEmail, `New message from ${userName}`, text);
+    }
+  }
 
-/* Escape HTML */
-function escapeHtml(unsafe){
-  if(!unsafe) return '';
-  return String(unsafe)
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'",'&#039;')
-    .replaceAll('\n','<br>');
-}
+  // --- EMAIL NOTIFICATIONS ---
+  function sendEmail(to, subject, message) {
+    emailjs.send("service_au8aho1", "template_7gfx3ty", {
+      to_email: to,
+      subject: subject,
+      message: message
+    });
+  }
 
-/* Clear unread count on focus */
-window.addEventListener('focus', () => {
-  unreadCount = 0;
-  updateUnreadBadge();
-});
+  function notifyUser(chatId, text) {
+    db.ref(`chats/${chatId}`).once("value").then(snap => {
+      const data = snap.val();
+      if (data && data.email) {
+        sendEmail(data.email, "Reply from Agent", text);
+      }
+    });
+  }
+
+  // --- SHOW MESSAGES ---
+  function showMessage(type, sender, text) {
+    const box = document.getElementById("messages");
+    const div = document.createElement("div");
+    div.classList.add("msg", type);
+    div.innerHTML = `<b>${sender}</b><br>${text}`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
 </script>
 </body>
 </html>
