@@ -4,9 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin Chat — Mobile Style</title>
+
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+
+<!-- EmailJS -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+<link rel="manifest" href="/manifest.json">
 <style>
   * {box-sizing:border-box;margin:0;padding:0;font-family:Poppins,sans-serif;}
   body, html {height:100%;background:#e5ddd5;display:flex;flex-direction:column;}
@@ -18,17 +25,30 @@
   #menuBtn {font-size:22px;display:none;}
 
   .container {flex:1;display:flex;overflow:hidden;position:relative;}
-
-  .sidebar {width:260px;background:linear-gradient(to bottom,#128c7e,#075e54);color:white;flex-shrink:0;display:flex;flex-direction:column;transition:transform 0.3s ease;}
-  .sidebar h2 {text-align:center;padding:16px 0;font-size:18px;}
+  .sidebar {
+    width:260px;background:linear-gradient(to bottom,#128c7e,#075e54);color:white;
+    flex-shrink:0;display:flex;flex-direction:column;transition:transform .3s ease;
+  }
+  .sidebar h2 {text-align:center;padding:16px 0;font-size:18px;border-bottom:1px solid rgba(255,255,255,0.2);}
   #userList {flex:1;overflow-y:auto;padding:0 8px;}
-  .userItem {padding:12px 10px;margin:6px 0;border-radius:10px;background:#128c7e;display:flex;justify-content:space-between;align-items:center;cursor:pointer;position:relative;}
+  .userItem {
+    padding:10px;margin:6px 0;border-radius:10px;background:#128c7e;
+    display:flex;justify-content:space-between;align-items:center;cursor:pointer;
+    position:relative;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+  }
   .userItem:hover {background:#0b6b5d;}
-  .userItem .badge {background:#25d366;color:white;padding:2px 6px;font-size:11px;border-radius:999px;position:absolute;top:8px;right:8px;display:none;}
-  .userItem button {background:#c0392b;border:none;border-radius:6px;color:white;padding:4px 8px;font-size:12px;}
-
+  .userItem .info {flex:1;overflow:hidden;text-overflow:ellipsis;}
+  .userItem .badge {
+    background:#25d366;color:white;padding:2px 6px;font-size:11px;border-radius:999px;
+    position:absolute;top:8px;right:8px;display:none;
+  }
+  .userItem.unread::after {
+    content:"•";color:#25d366;font-size:20px;position:absolute;left:8px;top:50%;transform:translateY(-50%);
+  }
+  .userItem button {
+    background:#c0392b;border:none;border-radius:6px;color:white;padding:4px 8px;font-size:12px;margin-left:5px;
+  }
   .sidebar.hide {transform:translateX(-100%);}
-
   .chat-area {flex:1;display:flex;flex-direction:column;background:#ece5dd;position:relative;}
   .chat-header {background:#075e54;color:white;padding:12px 16px;font-weight:600;display:flex;align-items:center;justify-content:space-between;}
   .chat-header #backBtn {display:none;font-size:20px;margin-right:8px;cursor:pointer;}
@@ -37,14 +57,11 @@
   .sent {background:#dcf8c6;color:black;align-self:flex-end;border-bottom-right-radius:4px;}
   .received {background:#fff;align-self:flex-start;border-bottom-left-radius:4px;border:1px solid #ddd;}
   .meta {font-size:11px;color:#555;margin-top:4px;text-align:right;}
-
   .input-area {display:flex;padding:10px;border-top:1px solid #ddd;background:white;}
   .input-area textarea {flex:1;padding:10px;border-radius:20px;border:1px solid #ccc;resize:none;font-family:inherit;}
   .input-area button {margin-left:8px;background:#075e54;color:white;border:none;border-radius:20px;padding:10px 16px;}
   .input-area button:hover {background:#128c7e;}
-
   audio {display:none;}
-
   @media(max-width:600px){
     #menuBtn {display:block;}
     .sidebar {position:absolute;z-index:100;height:100%;top:0;left:0;}
@@ -60,13 +77,11 @@
 </header>
 
 <div class="container">
-  <!-- USER LIST -->
   <aside class="sidebar" id="sidebar">
     <h2>💬 Users</h2>
     <div id="userList"></div>
   </aside>
 
-  <!-- CHAT AREA -->
   <div class="chat-area">
     <div class="chat-header">
       <span id="backBtn">←</span>
@@ -83,122 +98,135 @@
 <audio id="notifySound" src="https://assets.mixkit.co/active_storage/sfx/2212/2212-preview.mp3" preload="auto"></audio>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyB4DMYZJHWgbRUZV-uamOy7TpxLM1sGYPY",
-    authDomain: "chats-afcff.firebaseapp.com",
-    databaseURL: "https://chats-afcff-default-rtdb.firebaseio.com",
-    projectId: "chats-afcff",
-    storageBucket: "chats-afcff.appspot.com",
-    messagingSenderId: "764250889947",
-    appId: "1:764250889947:web:2c843497ce389edf5876fe"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+const firebaseConfig = {
+  apiKey: "AIzaSyB4DMYZJHWgbRUZV-uamOy7TpxLM1sGYPY",
+  authDomain: "chats-afcff.firebaseapp.com",
+  databaseURL: "https://chats-afcff-default-rtdb.firebaseio.com",
+  projectId: "chats-afcff",
+  storageBucket: "chats-afcff.appspot.com",
+  messagingSenderId: "764250889947",
+  appId: "1:764250889947:web:2c843497ce389edf5876fe"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const messaging = firebase.messaging();
 
-  const EMAILJS_SERVICE = "service_7servqq";
-  const EMAILJS_TEMPLATE = "template_abw3a7q";
-  const EMAILJS_PUBLIC_KEY = "ayBtD4ucWPOYC7x47";
-  emailjs.init(EMAILJS_PUBLIC_KEY);
+const EMAILJS_SERVICE = "service_7servqq";
+const EMAILJS_TEMPLATE = "template_abw3a7q";
+const EMAILJS_PUBLIC_KEY = "ayBtD4ucWPOYC7x47";
+emailjs.init(EMAILJS_PUBLIC_KEY);
 
-  const ADMIN_NAME = "Agent";
-  const ADMIN_EMAIL = "smith4jones778@gmail.com";
+const ADMIN_NAME = "Agent";
+const ADMIN_EMAIL = "smith4jones778@gmail.com";
 
-  let currentChatId = "";
-  let currentUserEmail = "";
-  let currentUserName = "";
+let currentChatId = "", currentUserEmail = "", currentUserName = "", userElements = {};
+const menuBtn=document.getElementById("menuBtn"), sidebar=document.getElementById("sidebar"), backBtn=document.getElementById("backBtn");
+menuBtn.addEventListener('click',()=>sidebar.classList.toggle('hide'));
+backBtn.addEventListener('click',()=>sidebar.classList.remove('hide'));
 
-  const menuBtn = document.getElementById("menuBtn");
-  const sidebar = document.getElementById("sidebar");
-  const backBtn = document.getElementById("backBtn");
+// ✅ Request Notification permission
+if ("Notification" in window && Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
 
-  menuBtn.addEventListener('click',()=>sidebar.classList.toggle('hide'));
-  backBtn.addEventListener('click',()=>sidebar.classList.remove('hide'));
+// ✅ Register Service Worker for PWA + FCM
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/firebase-messaging-sw.js')
+  .then(() => console.log('Service Worker Registered for Notifications'));
+}
 
-  function loadUsers(){
-    const userList=document.getElementById("userList");
-    db.ref("chats").on("value",snapshot=>{
-      userList.innerHTML="";
-      snapshot.forEach(child=>{
-        const data=child.val();
-        const div=document.createElement("div");
-        div.className="userItem";
-        div.textContent=`${data.username} (${data.email})`;
+// --- Load Users ---
+function loadUsers(){
+  const userList=document.getElementById("userList");
+  db.ref("chats").on("value",snapshot=>{
+    userList.innerHTML="";
+    userElements={};
+    snapshot.forEach(child=>{
+      const data=child.val();
+      const div=document.createElement("div");
+      div.className="userItem";
+      div.innerHTML=`<div class="info">${data.username} (${data.email})</div>`;
+      const badge=document.createElement("span");
+      badge.className="badge";
+      badge.textContent="0";
+      div.appendChild(badge);
 
-        const badge=document.createElement("span");
-        badge.className="badge";
-        badge.textContent="1"; // Will update dynamically
-        div.appendChild(badge);
+      const delBtn=document.createElement("button");
+      delBtn.textContent="Delete";
+      delBtn.onclick=e=>{
+        e.stopPropagation();
+        if(confirm(`Delete chat with ${data.username}?`))
+          db.ref("chats/"+child.key).remove();
+      };
+      div.appendChild(delBtn);
 
-        div.onclick=()=>openChat(child.key,data.username,data.email,badge);
+      div.onclick=()=>openChat(child.key,data.username,data.email,badge,div);
+      userList.appendChild(div);
+      userElements[child.key]={div,badge};
 
-        const delBtn=document.createElement("button");
-        delBtn.textContent="Delete";
-        delBtn.onclick=e=>{e.stopPropagation();if(confirm(`Delete chat with ${data.username}?`)) db.ref("chats/"+child.key).remove();}
-        div.appendChild(delBtn);
+      // Track unread messages
+      db.ref(`chats/${child.key}/messages`).on("child_added", snap=>{
+        const msg=snap.val();
+        const lastRead=localStorage.getItem(`lastRead_${child.key}`)||0;
+        const msgTime=new Date(msg.timestamp).getTime();
 
-        userList.appendChild(div);
+        if(msg.sender!==ADMIN_NAME && msgTime>lastRead && currentChatId!==child.key){
+          badge.style.display="inline-block";
+          badge.textContent=(parseInt(badge.textContent)||0)+1;
+          div.classList.add("unread");
+
+          if(Notification.permission==="granted"){
+            new Notification(`New message from ${data.username}`, {
+              body: msg.text,
+              icon: "https://cdn-icons-png.flaticon.com/512/2950/2950176.png"
+            });
+          }
+          document.getElementById("notifySound").play();
+        }
       });
     });
-  }
-  loadUsers();
+  });
+}
+loadUsers();
 
-  function openChat(chatId,userName,userEmail,badge){
-    currentChatId=chatId;
-    currentUserName=userName;
-    currentUserEmail=userEmail;
-    document.getElementById("chatWith").textContent=userName;
-    document.getElementById("messages").innerHTML="";
-    badge.style.display="none";
-    if(window.innerWidth<=600) sidebar.classList.add('hide');
+// --- Open Chat ---
+function openChat(chatId,userName,userEmail,badge,div){
+  currentChatId=chatId;
+  currentUserName=userName;
+  currentUserEmail=userEmail;
+  document.getElementById("chatWith").textContent=userName;
+  document.getElementById("messages").innerHTML="";
+  badge.style.display="none";
+  div.classList.remove("unread");
 
-    db.ref(`chats/${chatId}/messages`).off();
-    db.ref(`chats/${chatId}/messages`).on("child_added",snap=>{
-      const msg=snap.val();
-      const div=document.createElement("div");
-      div.classList.add("msg",msg.sender===ADMIN_NAME?"sent":"received");
-      div.innerHTML=`<b>${msg.sender}</b><br>${msg.text}<div class="meta">${new Date(msg.timestamp).toLocaleString()}</div>`;
-      document.getElementById("messages").appendChild(div);
-      document.getElementById("messages").scrollTop=document.getElementById("messages").scrollHeight;
+  localStorage.setItem(`lastRead_${chatId}`, Date.now());
 
-      if(msg.sender!==ADMIN_NAME){
-        document.getElementById("notifySound").play();
-        sendEmailToAdmin(msg.sender,currentUserEmail,msg.text);
-      }
-    });
-  }
+  if(window.innerWidth<=600) sidebar.classList.add('hide');
+  db.ref(`chats/${chatId}/messages`).off();
+  db.ref(`chats/${chatId}/messages`).on("child_added",snap=>{
+    const msg=snap.val();
+    const divMsg=document.createElement("div");
+    divMsg.classList.add("msg",msg.sender===ADMIN_NAME?"sent":"received");
+    divMsg.innerHTML=`<b>${msg.sender}</b><br>${msg.text}<div class="meta">${new Date(msg.timestamp).toLocaleString()}</div>`;
+    document.getElementById("messages").appendChild(divMsg);
+    document.getElementById("messages").scrollTop=document.getElementById("messages").scrollHeight;
+  });
+}
 
-  function sendMessage(){
-    const text=document.getElementById("replyInput").value.trim();
-    if(!text||!currentChatId) return alert("Select a user first!");
-    document.getElementById("replyInput").value="";
-
-    const msg={sender:ADMIN_NAME,text,timestamp:new Date().toISOString()};
-    db.ref(`chats/${currentChatId}/messages`).push(msg);
-    sendEmailToUser(currentUserEmail,`Reply from ${ADMIN_NAME}`,ADMIN_NAME,text);
-  }
-
-  function sendEmailToUser(to,subject,fromName,messageText){
-    emailjs.send(EMAILJS_SERVICE,EMAILJS_TEMPLATE,{
-      to_email:to,
-      from_name:fromName||ADMIN_NAME,
-      from_email:ADMIN_EMAIL,
-      subject:subject,
-      message:messageText
-    }).then(()=>console.log("✅ Email sent to user:",to))
-      .catch(err=>console.error("❌ EmailJS error:",err));
-  }
-
-  function sendEmailToAdmin(fromName,fromEmail,text){
-    emailjs.send(EMAILJS_SERVICE,EMAILJS_TEMPLATE,{
-      to_email:ADMIN_EMAIL,
-      from_name:fromName,
-      from_email:fromEmail,
-      subject:`New message from ${fromName}`,
-      message:`New message from ${fromName} (${fromEmail}):\n\n${text}`
-    }).then(()=>console.log("✅ Admin notified"))
-      .catch(err=>console.error("❌ Admin email error:",err));
-  }
+// --- Send Message ---
+function sendMessage(){
+  const text=document.getElementById("replyInput").value.trim();
+  if(!text||!currentChatId) return alert("Select a user first!");
+  document.getElementById("replyInput").value="";
+  const msg={sender:ADMIN_NAME,text,timestamp:new Date().toISOString()};
+  db.ref(`chats/${currentChatId}/messages`).push(msg);
+  sendEmailToUser(currentUserEmail,`Reply from ${ADMIN_NAME}`,ADMIN_NAME,text);
+}
+function sendEmailToUser(to,subject,fromName,messageText){
+  emailjs.send(EMAILJS_SERVICE,EMAILJS_TEMPLATE,{
+    to_email:to,from_name:fromName||ADMIN_NAME,from_email:ADMIN_EMAIL,subject:subject,message:messageText
+  });
+}
 </script>
-
 </body>
 </html>
