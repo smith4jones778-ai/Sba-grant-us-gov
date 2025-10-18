@@ -96,7 +96,7 @@
 
   <script>
     // Initialize EmailJS
-    emailjs.init("NH7GD7-O8VKuKcfab");
+    emailjs.init("uV-XzAWtJC-HtkIah");
 
     const emailsInput = document.getElementById("emails");
     const subjectInput = document.getElementById("subject");
@@ -140,7 +140,7 @@
         const email = emailList[i];
         logContainer.innerHTML += `<p>Sending to ${email}...</p>`;
         try {
-          await emailjs.send("service_au8aho1", "template_yp2we75", {
+          await emailjs.send("service_emails", "template_emails", {
             email: email,          // matches {{email}} in template
             subject: subject,      // matches {{subject}} in template
             from_name: fromName,   // matches {{from_name}} in template
