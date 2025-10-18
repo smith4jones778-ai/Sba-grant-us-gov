@@ -66,11 +66,31 @@
       background: #f7f7f7;
       padding: 10px;
       border-radius: 6px;
-      max-height: 200px;
+      max-height: 250px;
       overflow-y: auto;
     }
     .success { color: green; }
     .error { color: red; }
+    .skipped { color: orange; }
+
+    /* Progress bar styling */
+    .progress-container {
+      background: #e0e0e0;
+      border-radius: 10px;
+      height: 20px;
+      margin-top: 15px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #0a3161;
+      color: white;
+      text-align: center;
+      line-height: 20px;
+      font-size: 12px;
+      transition: width 0.3s ease;
+    }
   </style>
 </head>
 <body>
@@ -89,6 +109,9 @@
     <button id="prepareBtn">Prepare Recipients</button>
 
     <div id="listContainer" class="list" style="display:none;"></div>
+    <div class="progress-container" id="progressContainer" style="display:none;">
+      <div class="progress-bar" id="progressBar">0%</div>
+    </div>
     <button id="sendBtn" style="display:none;">Send Emails</button>
 
     <div id="log" class="log"></div>
@@ -105,15 +128,27 @@
     const sendBtn = document.getElementById("sendBtn");
     const listContainer = document.getElementById("listContainer");
     const logContainer = document.getElementById("log");
+    const progressContainer = document.getElementById("progressContainer");
+    const progressBar = document.getElementById("progressBar");
 
     let emailList = [];
 
-    // Step 1: Prepare emails
+    // STEP 1 — Prepare emails
     prepareBtn.addEventListener("click", () => {
       const raw = emailsInput.value.trim();
       if (!raw) return alert("Please enter at least one email address.");
 
-      const emails = raw.split(/[\s,;]+/).filter(e => e.includes("@"));
+      // Split and clean emails
+      const emails = raw
+        .split(/[\s,;]+/)
+        .map(e => e.trim())
+        .filter(e => e && e.includes("@") && e.includes("."));
+
+      if (emails.length === 0) {
+        alert("No valid email addresses found. Please check your input.");
+        return;
+      }
+
       if (emails.length > 20) {
         alert("You can only send to a maximum of 20 emails at once.");
         return;
@@ -123,36 +158,62 @@
       listContainer.innerHTML = "<strong>Prepared Recipients:</strong><br>" + emails.map(e => `<div class='email-item'>📧 ${e}</div>`).join("");
       listContainer.style.display = "block";
       sendBtn.style.display = "inline-block";
+      progressContainer.style.display = "none";
       logContainer.innerHTML = "";
     });
 
-    // Step 2: Send emails one-by-one with delay
+    // STEP 2 — Send emails
     sendBtn.addEventListener("click", async () => {
-      if (emailList.length === 0) return alert("No email addresses found.");
+      if (emailList.length === 0) return alert("No valid email addresses to send to.");
 
       const subject = subjectInput.value.trim();
       const fromName = fromInput.value.trim();
 
+      if (!subject || !fromName) {
+        alert("Please fill out both Subject and From Name fields before sending.");
+        return;
+      }
+
       sendBtn.disabled = true;
       logContainer.innerHTML += `<p>Sending ${emailList.length} emails...</p>`;
+      progressContainer.style.display = "block";
+      progressBar.style.width = "0%";
+      progressBar.textContent = "0%";
+
+      let sentCount = 0;
 
       for (let i = 0; i < emailList.length; i++) {
         const email = emailList[i];
+
+        if (!email || !email.includes("@")) {
+          logContainer.innerHTML += `<p class='skipped'>⚠️ Skipped invalid email entry.</p>`;
+          continue;
+        }
+
         logContainer.innerHTML += `<p>Sending to ${email}...</p>`;
+
         try {
           await emailjs.send("service_emails", "template_emails", {
-            email: email,          // matches {{email}} in template
-            subject: subject,      // matches {{subject}} in template
-            from_name: fromName,   // matches {{from_name}} in template
+            to_email: email,   // matches your EmailJS variable
+            from_name: fromName,
+            subject: subject
           });
+
           logContainer.innerHTML += `<p class='success'>✅ Sent to ${email}</p>`;
+          sentCount++;
         } catch (err) {
           logContainer.innerHTML += `<p class='error'>❌ Failed to send to ${email}: ${err.text || err.message}</p>`;
         }
-        await new Promise(r => setTimeout(r, 2500)); // wait 2.5s between sends
+
+        // Update progress bar
+        const progress = Math.round(((i + 1) / emailList.length) * 100);
+        progressBar.style.width = progress + "%";
+        progressBar.textContent = `${progress}% (${i + 1} of ${emailList.length})`;
+
+        await new Promise(r => setTimeout(r, 2500)); // delay between sends
       }
 
-      logContainer.innerHTML += `<p><strong>All emails processed.</strong></p>`;
+      logContainer.innerHTML += `<p><strong>✅ ${sentCount} of ${emailList.length} emails sent successfully.</strong></p>`;
       sendBtn.disabled = false;
     });
   </script>
