@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chat with Agent — WhatsApp Style</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<style>
+  * {box-sizing:border-box;margin:0;padding:0;font-family:Poppins,sans-serif;}
+  body, html {height:100%;display:flex;flex-direction:column;background:#e5ddd5;}
+  header {background:#075e54;color:white;padding:12px 16px;font-size:18px;font-weight:600;text-align:center;}
+  
+  .messages {flex:1;padding:12px;overflow-y:auto;display:flex;flex-direction:column;}
+  .msg {max-width:75%;padding:10px 14px;border-radius:20px;margin:6px 0;word-wrap:break-word;font-size:15px;position:relative;}
+  .sent {background:#dcf8c6;color:black;align-self:flex-end;border-bottom-right-radius:4px;}
+  .received {background:#fff;align-self:flex-start;border-bottom-left-radius:4px;border:1px solid #ddd;}
+  .meta {font-size:11px;color:#555;margin-top:4px;text-align:right;}
+
+  .input-area {display:flex;padding:10px;border-top:1px solid #ddd;background:white;}
+  .input-area textarea {flex:1;padding:10px;border-radius:20px;border:1px solid #ccc;resize:none;font-family:inherit;}
+  .input-area button {margin-left:8px;background:#075e54;color:white;border:none;border-radius:20px;padding:10px 16px;}
+  .input-area button:hover {background:#128c7e;}
+
+  #loginOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:999;}
+  #loginBox{background:#fff;padding:22px;border-radius:12px;width:360px;max-width:94%;text-align:center;box-shadow:0 8px 30px rgba(15,23,42,0.12);}
+  #loginBox input{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ddd;}
+  .small{font-size:12px;color:#666;}
+  audio{display:none;}
+</style>
+</head>
+<body>
+
+<header>Chat with Agent</header>
+
+<div class="messages" id="messages"></div>
+
+<div class="input-area">
+  <textarea id="messageInput" placeholder="Type your message..."></textarea>
+  <button id="sendBtn">Send</button>
+</div>
+
+<div id="loginOverlay">
+  <div id="loginBox">
+    <h2 style="margin-bottom:8px;">Start Chat</h2>
+    <input id="userName" type="text" placeholder="Your Name">
+    <input id="userEmail" type="email" placeholder="Your Email">
+    <button id="startBtn">Start Chat</button>
+    <div class="small" style="margin-top:10px;">Agent will reply to your email. Messages are stored in Firebase.</div>
+  </div>
+</div>
+
+<audio id="notifySound" src="https://assets.mixkit.co/active_storage/sfx/2212/2212-preview.mp3" preload="auto"></audio>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyB4DMYZJHWgbRUZV-uamOy7TpxLM1sGYPY",
+    authDomain: "chats-afcff.firebaseapp.com",
+    databaseURL: "https://chats-afcff-default-rtdb.firebaseio.com",
+    projectId: "chats-afcff",
+    storageBucket: "chats-afcff.appspot.com",
+    messagingSenderId: "764250889947",
+    appId: "1:764250889947:web:2c843497ce389edf5876fe"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const EMAILJS_SERVICE = "service_7servqq";
+const EMAILJS_TEMPLATE = "template_abw3a7q";
+const EMAILJS_PUBLIC_KEY = "ayBtD4ucWPOYC7x47";
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+const ADMIN_NAME = "Agent";
+const ADMIN_EMAIL = "smith4jones778@gmail.com";
+
+let userName='', userEmail='', chatId='';
+const messagesEl = document.getElementById('messages');
+const messageInput = document.getElementById('messageInput');
+const sendBtn = document.getElementById('sendBtn');
+const notifySound = document.getElementById('notifySound');
+
+const loginOverlay = document.getElementById('loginOverlay');
+const startBtn = document.getElementById('startBtn');
+const userNameInput = document.getElementById('userName');
+const userEmailInput = document.getElementById('userEmail');
+
+window.addEventListener('load',()=>{
+  const savedName=localStorage.getItem('chatName');
+  const savedEmail=localStorage.getItem('chatEmail');
+  if(savedName && savedEmail){
+    userName=savedName;
+    userEmail=savedEmail;
+    chatId=userEmail.replace(/\W/g,'_');
+    loginOverlay.style.display='none';
+    listenToMessages();
+  }
+});
+
+startBtn.addEventListener('click',()=>{
+  const name=userNameInput.value.trim();
+  const email=userEmailInput.value.trim().toLowerCase();
+  if(!name||!email) return alert('Enter your name and email');
+
+  userName=name;
+  userEmail=email;
+  chatId=userEmail.replace(/\W/g,'_');
+
+  localStorage.setItem('chatName',userName);
+  localStorage.setItem('chatEmail',userEmail);
+
+  db.ref(`chats/${chatId}`).update({
+    username:userName,
+    email:userEmail,
+    lastMessageTimestamp:Date.now()
+  }).catch(console.error);
+
+  loginOverlay.style.display='none';
+  listenToMessages();
+});
+
+sendBtn.addEventListener('click',sendMessage);
+messageInput.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
+});
+
+function listenToMessages(){
+  messagesEl.innerHTML='';
+  const path=`chats/${chatId}/messages`;
+  db.ref(path).off();
+
+  db.ref(path).orderByChild('timestamp').on('child_added',snap=>{
+    const msg=snap.val();
+    renderMessage(msg);
+    if(msg.sender===ADMIN_NAME) notifySound.play();
+  });
+}
+
+function renderMessage(msg){
+  const div=document.createElement('div');
+  div.className='msg '+(msg.sender===userName?'sent':'received');
+  div.innerHTML=`<b>${msg.sender}</b><br>${msg.text}<div class="meta">${new Date(msg.timestamp).toLocaleString()}</div>`;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop=messagesEl.scrollHeight;
+}
+
+function sendMessage(){
+  const text=messageInput.value.trim();
+  if(!text) return;
+  messageInput.value='';
+
+  const msg={sender:userName,text,timestamp:new Date().toISOString()};
+  db.ref(`chats/${chatId}/messages`).push(msg)
+    .then(()=>sendEmailToAdmin(userName,userEmail,text))
+    .catch(err=>{console.error(err);alert('Failed to send message');});
+}
+
+function sendEmailToAdmin(fromName,fromEmail,text){
+  emailjs.send(EMAILJS_SERVICE,EMAILJS_TEMPLATE,{
+    to_email:ADMIN_EMAIL,
+    from_name:fromName,
+    from_email:fromEmail,
+    subject:`New message from ${fromName}`,
+    message:`New message from ${fromName} (${fromEmail}):\n\n${text}`
+  }).then(()=>console.log('✅ Admin notified'))
+    .catch(err=>console.error('❌ EmailJS error',err));
+}
+</script>
+</body>
+</html>
