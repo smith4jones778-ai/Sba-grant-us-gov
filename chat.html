@@ -4,11 +4,14 @@
   <meta charset="UTF-8">
   <title>Chat with Agent</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Firebase & EmailJS -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
   <style>
-    :root{--blue:#0078ff;--bg:#f2f5f9;--card:#fff}
+    :root{--blue:#0078ff;--bg:#f2f5f9;--card:#fff;--toast:#333}
     *{box-sizing:border-box}
     body{font-family:Poppins,system-ui,Arial;margin:0;height:100vh;display:flex;flex-direction:column;background:var(--bg)}
     header{background:var(--blue);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
@@ -27,6 +30,8 @@
     #loginBox{background:var(--card);padding:22px;border-radius:12px;width:360px;max-width:94%;text-align:center;box-shadow:0 8px 30px rgba(15,23,42,0.12)}
     #loginBox input{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #ddd}
     .small{font-size:12px;color:#666}
+    #toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) scale(0.9);background:var(--toast);color:#fff;padding:12px 18px;border-radius:10px;opacity:0;transition:all 0.4s ease;z-index:1000}
+    #toast.show{opacity:1;transform:translateX(-50%) scale(1)}
     @media(max-width:520px){#loginBox{width:92%}}
   </style>
 </head>
@@ -59,24 +64,24 @@
   </main>
 
   <audio id="notifySound" src="https://assets.mixkit.co/active_storage/sfx/2212/2212-preview.mp3" preload="auto"></audio>
+  <div id="toast"></div>
 
 <script>
 /* ================== CONFIG ================== */
 const firebaseConfig = {
-    apiKey: "AIzaSyB4DMYZJHWgbRUZV-uamOy7TpxLM1sGYPY",
-    authDomain: "chats-afcff.firebaseapp.com",
-    databaseURL: "https://chats-afcff-default-rtdb.firebaseio.com",
-    projectId: "chats-afcff",
-    storageBucket: "chats-afcff.appspot.com",
-    messagingSenderId: "764250889947",
-    appId: "1:764250889947:web:2c843497ce389edf5876fe"
-  };
+  apiKey: "AIzaSyB4DMYZJHWgbRUZV-uamOy7TpxLM1sGYPY",
+  authDomain: "chats-afcff.firebaseapp.com",
+  databaseURL: "https://chats-afcff-default-rtdb.firebaseio.com",
+  projectId: "chats-afcff",
+  storageBucket: "chats-afcff.appspot.com",
+  messagingSenderId: "764250889947",
+  appId: "1:764250889947:web:2c843497ce389edf5876fe"
+};
 
 const EMAILJS_SERVICE = "service_7servqq";
-  const EMAILJS_TEMPLATE = "template_abw3a7q";
-  const EMAILJS_PUBLIC_KEY = "ayBtD4ucWPOYC7x47";
+const EMAILJS_TEMPLATE = "template_abw3a7q";
+const EMAILJS_PUBLIC_KEY = "ayBtD4ucWPOYC7x47";
 
-// Use the ADMIN_EMAIL you provided in your code
 const ADMIN_NAME = "Agent";
 const ADMIN_EMAIL = "smith4jones778@gmail.com";
 /* =========================================== */
@@ -96,11 +101,13 @@ const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 const notifySound = document.getElementById('notifySound');
 const unreadBadge = document.getElementById('unreadBadge');
+const toast = document.getElementById('toast');
 
 let userName = '';
 let userEmail = '';
 let chatId = '';
 let unreadCount = 0;
+let lastLoadedTimestamp = 0;
 
 /* ---------- Session restore ---------- */
 window.addEventListener('load', () => {
@@ -125,11 +132,9 @@ startBtn.addEventListener('click', () => {
   userEmail = email;
   chatId = userEmail.replace(/\W/g,'_');
 
-  // save session
   localStorage.setItem('chatName', userName);
   localStorage.setItem('chatEmail', userEmail);
 
-  // Ensure chat meta exists
   db.ref(`chats/${chatId}`).update({
     username: userName,
     email: userEmail,
@@ -145,23 +150,19 @@ function listenToMessages(){
   messagesEl.innerHTML = '';
   unreadCount = 0;
   updateUnreadBadge();
-
   const path = `chats/${chatId}/messages`;
-
-  // remove old listeners if any
   db.ref(path).off();
 
-  // child_added for real-time messages
+  lastLoadedTimestamp = Date.now();
+
   db.ref(path).orderByChild('timestamp').on('child_added', snap => {
     const key = snap.key;
     const msg = snap.val();
     renderMessage(key, msg);
 
-    // If admin message -> mark seen and play sound
+    // Handle admin message
     if (msg.sender === ADMIN_NAME) {
-      if (!msg.seen) {
-        db.ref(`${path}/${key}`).update({ seen: true }).catch(()=>{});
-      }
+      if (!msg.seen) db.ref(`${path}/${key}`).update({ seen: true }).catch(()=>{});
       notifySound.currentTime = 0;
       notifySound.play().catch(()=>{});
       if (!document.hasFocus()) {
@@ -169,9 +170,14 @@ function listenToMessages(){
         updateUnreadBadge();
       }
     }
+
+    // Only send EmailJS for NEW messages sent after listener attached
+    if (msg.sender === userName && new Date(msg.timestamp).getTime() > lastLoadedTimestamp) {
+      sendEmailToAdmin(userName, userEmail, msg.text);
+      showToast("Message sent successfully ✅");
+    }
   });
 
-  // child_changed to reflect edits/deletes/seen
   db.ref(path).on('child_changed', snap => {
     const key = snap.key;
     const msg = snap.val();
@@ -179,21 +185,25 @@ function listenToMessages(){
     if (el) {
       const bubble = el.querySelector('.msg');
       if (bubble) {
-        bubble.innerHTML = `<strong>${escapeHtml(msg.sender)}</strong><div>${escapeHtml(msg.text)}</div><div class="meta">${new Date(msg.timestamp).toLocaleString()}${msg.seen ? ' ✅' : ''}</div>`;
+        bubble.innerHTML = `<strong>${escapeHtml(msg.sender)}</strong>
+          <div>${escapeHtml(msg.text)}</div>
+          <div class="meta">${new Date(msg.timestamp).toLocaleString()}${msg.seen ? ' ✅' : ''}</div>`;
         bubble.className = 'msg ' + (msg.sender === userName ? 'sent' : 'received');
       }
     }
   });
 }
 
-/* ---------- Render single message ---------- */
+/* ---------- Render message ---------- */
 function renderMessage(key, msg){
   const row = document.createElement('div');
   row.setAttribute('data-msg-key', key);
 
   const bubble = document.createElement('div');
   bubble.className = 'msg ' + (msg.sender === userName ? 'sent' : 'received');
-  bubble.innerHTML = `<strong>${escapeHtml(msg.sender)}</strong><div>${escapeHtml(msg.text)}</div><div class="meta">${new Date(msg.timestamp).toLocaleString()}${msg.seen ? ' ✅' : ''}</div>`;
+  bubble.innerHTML = `<strong>${escapeHtml(msg.sender)}</strong>
+    <div>${escapeHtml(msg.text)}</div>
+    <div class="meta">${new Date(msg.timestamp).toLocaleString()}${msg.seen ? ' ✅' : ''}</div>`;
 
   row.appendChild(bubble);
   messagesEl.appendChild(row);
@@ -202,7 +212,7 @@ function renderMessage(key, msg){
 
 /* ---------- Send message ---------- */
 sendBtn.addEventListener('click', sendMessage);
-messageInput.addEventListener('keydown', (e) => {
+messageInput.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     sendMessage();
@@ -222,14 +232,10 @@ function sendMessage(){
     seen: false
   };
 
-  // push to firebase
   db.ref(path).push(msg)
     .then(() => {
       messageInput.value = '';
-      // update chat meta timestamp
       db.ref(`chats/${chatId}`).update({ lastMessageTimestamp: Date.now() }).catch(()=>{});
-      // notify admin via EmailJS
-      sendEmailToAdmin(userName, userEmail, text);
     })
     .catch(err => {
       console.error('Firebase push error', err);
@@ -237,7 +243,7 @@ function sendMessage(){
     });
 }
 
-/* ---------- EmailJS: notify admin ---------- */
+/* ---------- EmailJS ---------- */
 function sendEmailToAdmin(fromName, fromEmail, text){
   const params = {
     to_email: ADMIN_EMAIL,
@@ -248,10 +254,14 @@ function sendEmailToAdmin(fromName, fromEmail, text){
   };
   emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, params)
     .then(() => console.log('✅ Admin notified via EmailJS'))
-    .catch(err => {
-      console.error('❌ EmailJS admin notify error', err);
-      // do not interrupt user
-    });
+    .catch(err => console.error('❌ EmailJS error', err));
+}
+
+/* ---------- Toast ---------- */
+function showToast(msg){
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
 /* ---------- Unread badge ---------- */
@@ -276,9 +286,8 @@ function escapeHtml(unsafe){
     .replaceAll('\n','<br>');
 }
 
-/* When user focuses window, reset unread counter */
 window.addEventListener('focus', () => { unreadCount = 0; updateUnreadBadge(); });
 
 </script>
 </body>
-</html>
+  </html>
