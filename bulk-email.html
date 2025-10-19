@@ -14,18 +14,30 @@
       padding: 20px;
     }
     .container {
-      max-width: 700px;
+      max-width: 900px;
       margin: 0 auto;
       background: #fff;
       border-radius: 10px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       padding: 25px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .form-section, .preview-section {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 20px;
+      background: #fafbfc;
     }
     h1 {
       color: #0a3161;
       font-size: 22px;
+      grid-column: span 2;
       text-align: center;
+      margin-bottom: 10px;
     }
+    label { font-weight: 600; display: block; margin-top: 10px; }
     textarea, input {
       width: 100%;
       border-radius: 6px;
@@ -34,9 +46,7 @@
       resize: vertical;
       font-size: 15px;
     }
-    textarea {
-      height: 120px;
-    }
+    textarea { height: 100px; }
     button {
       background-color: #0a3161;
       color: white;
@@ -47,9 +57,7 @@
       cursor: pointer;
       margin-top: 10px;
     }
-    button:hover {
-      background-color: #06315d;
-    }
+    button:hover { background-color: #06315d; }
     .list {
       background: #f9fafc;
       padding: 10px;
@@ -57,45 +65,63 @@
       margin-top: 15px;
       font-size: 14px;
     }
-    .email-item {
-      margin-bottom: 4px;
-    }
+    .email-item { margin-bottom: 4px; }
     .log {
       margin-top: 15px;
       font-size: 14px;
       background: #f7f7f7;
       padding: 10px;
       border-radius: 6px;
-      max-height: 200px;
+      max-height: 180px;
       overflow-y: auto;
     }
     .success { color: green; }
     .error { color: red; }
+    .preview {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      height: 500px;
+      overflow-y: auto;
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.05);
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Bulk Email Sender — SBA Grant Program</h1>
 
-    <label><strong>Subject:</strong></label>
-    <input id="subject" type="text" placeholder="Enter email subject" value="SBA Grant Program Update — October–December">
+    <!-- LEFT: EMAIL FORM -->
+    <div class="form-section">
+      <label>Subject:</label>
+      <input id="subject" type="text" value="SBA Grant Program Update — October–December">
 
-    <label style="margin-top:10px;"><strong>From Name:</strong></label>
-    <input id="from_name" type="text" placeholder="From name (e.g., SBA Grant Information Team)" value="SBA Grant Information Team">
+      <label>From Name:</label>
+      <input id="from_name" type="text" value="SBA Grant Information Team">
 
-    <p style="margin-top:10px;">Paste up to <strong>20 email addresses</strong> (comma, space, or line separated):</p>
-    <textarea id="emails" placeholder="example1@email.com, example2@email.com, ..."></textarea>
+      <label>Email List (max 20):</label>
+      <textarea id="emails" placeholder="example1@email.com, example2@email.com"></textarea>
 
-    <button id="prepareBtn">Prepare Recipients</button>
+      <button id="prepareBtn">Prepare Recipients</button>
 
-    <div id="listContainer" class="list" style="display:none;"></div>
-    <button id="sendBtn" style="display:none;">Send Emails</button>
+      <div id="listContainer" class="list" style="display:none;"></div>
+      <button id="sendBtn" style="display:none;">Send Emails</button>
 
-    <div id="log" class="log"></div>
+      <div id="log" class="log"></div>
+    </div>
+
+    <!-- RIGHT: EMAIL PREVIEW -->
+    <div class="preview-section">
+      <label>Live Preview:</label>
+      <div id="preview" class="preview">
+        <p style="color:#999;">Type a subject and from name to preview the message...</p>
+      </div>
+    </div>
   </div>
 
   <script>
-    // Initialize EmailJS
+    // ===== EmailJS Setup =====
     emailjs.init("uV-XzAWtJC-HtkIah");
 
     const emailsInput = document.getElementById("emails");
@@ -105,34 +131,68 @@
     const sendBtn = document.getElementById("sendBtn");
     const listContainer = document.getElementById("listContainer");
     const logContainer = document.getElementById("log");
+    const preview = document.getElementById("preview");
 
     let emailList = [];
 
-    // Step 1: Prepare emails
+    // ===== Update Live Preview =====
+    function updatePreview() {
+      const subject = subjectInput.value.trim() || "(No Subject)";
+      const fromName = fromInput.value.trim() || "SBA Grant Team";
+      preview.innerHTML = `
+        <div style="font-family:Segoe UI,Arial,sans-serif; line-height:1.6;">
+          <h3 style="color:#0a3161;">${subject}</h3>
+          <p>Hi there,</p>
+          <p>
+            We wanted to let you know that applications are now open for the
+            <strong>October–December SBA Grant Program</strong>.
+          </p>
+          <p>
+            This round supports small business owners focused on innovation and community development.
+          </p>
+          <p style="text-align:center; margin:20px 0;">
+            <a href="https://sba-grant-us-gov.vercel.app/grant-eligibility.html"
+               style="background:#0a3161; color:white; text-decoration:none; padding:10px 20px; border-radius:6px;">
+               Check Eligibility
+            </a>
+          </p>
+          <p>
+            If you have questions, contact us at 
+            <a href="mailto:support@sba-grant-us.vercel.app">support@sba-grant-us.vercel.app</a>.
+          </p>
+          <p>Best,<br><strong>${fromName}</strong></p>
+          <hr style="border:none; border-top:1px solid #eee; margin-top:20px;">
+          <p style="font-size:12px; color:#888;">
+            © 2025 SBA Grant Information Office — Washington, D.C.
+          </p>
+        </div>`;
+    }
+
+    subjectInput.addEventListener("input", updatePreview);
+    fromInput.addEventListener("input", updatePreview);
+    updatePreview();
+
+    // ===== Step 1: Prepare Recipients =====
     prepareBtn.addEventListener("click", () => {
       const raw = emailsInput.value.trim();
       if (!raw) return alert("Please enter at least one email address.");
 
       const emails = raw.split(/[\s,;]+/).filter(e => e.includes("@"));
-      if (emails.length > 20) {
-        alert("You can only send to a maximum of 20 emails at once.");
-        return;
-      }
+      if (emails.length > 20) return alert("Max 20 emails per batch.");
 
       emailList = emails;
-      listContainer.innerHTML = "<strong>Prepared Recipients:</strong><br>" + emails.map(e => `<div class='email-item'>📧 ${e}</div>`).join("");
+      listContainer.innerHTML = "<strong>Recipients:</strong><br>" +
+        emails.map(e => `<div class='email-item'>📧 ${e}</div>`).join("");
       listContainer.style.display = "block";
       sendBtn.style.display = "inline-block";
       logContainer.innerHTML = "";
     });
 
-    // Step 2: Send emails one-by-one with delay
+    // ===== Step 2: Send Emails =====
     sendBtn.addEventListener("click", async () => {
-      if (emailList.length === 0) return alert("No email addresses found.");
-
+      if (emailList.length === 0) return alert("No recipients.");
       const subject = subjectInput.value.trim();
       const fromName = fromInput.value.trim();
-
       sendBtn.disabled = true;
       logContainer.innerHTML += `<p>Sending ${emailList.length} emails...</p>`;
 
@@ -141,18 +201,18 @@
         logContainer.innerHTML += `<p>Sending to ${email}...</p>`;
         try {
           await emailjs.send("service_emails", "template_emails", {
-            email: email,          // matches {{email}} in template
-            subject: subject,      // matches {{subject}} in template
-            from_name: fromName,   // matches {{from_name}} in template
+            email,
+            subject,
+            from_name: fromName,
           });
           logContainer.innerHTML += `<p class='success'>✅ Sent to ${email}</p>`;
         } catch (err) {
           logContainer.innerHTML += `<p class='error'>❌ Failed to send to ${email}: ${err.text || err.message}</p>`;
         }
-        await new Promise(r => setTimeout(r, 2500)); // wait 2.5s between sends
+        await new Promise(r => setTimeout(r, 2500));
       }
 
-      logContainer.innerHTML += `<p><strong>All emails processed.</strong></p>`;
+      logContainer.innerHTML += `<p><strong>✅ All emails processed.</strong></p>`;
       sendBtn.disabled = false;
     });
   </script>
