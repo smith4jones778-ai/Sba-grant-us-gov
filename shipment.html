@@ -1,0 +1,313 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Grant Cheque Disbursement | UPS Shipment</title>
+  <link rel="icon" type="image/png" href="ups-logo.png">
+
+  <style>
+    :root {
+      --ups-brown: #351c15;
+      --ups-gold: #ffb500;
+      --success: #2f8f4e;
+      --danger: #c23d3d;
+      --text-dark: #222;
+      --muted-bg: #fafafa;
+      --card-bg: #fff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--muted-bg);
+      color: var(--text-dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER AREA */
+    header {
+      background: linear-gradient(to bottom, #fff 80%, #f9f9f9);
+      border-bottom: 3px solid var(--ups-gold);
+      text-align: center;
+      padding: 20px;
+    }
+
+    .header-logos {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 10px;
+    }
+
+    .header-logos img {
+      height: 65px;
+      object-fit: contain;
+    }
+
+    header h1 {
+      color: var(--ups-brown);
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    header p {
+      font-size: 14px;
+      color: #666;
+    }
+
+    /* MAIN CONTENT */
+    .container {
+      display: flex;
+      gap: 28px;
+      padding: 28px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .left, .right {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+
+    .left {
+      flex: 1;
+      min-width: 320px;
+      max-width: 620px;
+    }
+
+    .right {
+      width: 360px;
+      min-width: 280px;
+      text-align: center;
+    }
+
+    h2 {
+      color: var(--ups-brown);
+      font-size: 18px;
+      margin-bottom: 10px;
+      border-bottom: 2px solid var(--ups-gold);
+      display: inline-block;
+      padding-bottom: 4px;
+    }
+
+    p.lead {
+      color: #333;
+      margin: 8px 0 14px;
+    }
+
+    .summary {
+      background: #fff8e6;
+      border: 1px solid #ffe2a8;
+      padding: 14px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .info-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .info-list li {
+      padding: 6px 0;
+      border-bottom: 1px dashed #ddd;
+    }
+
+    .approved-amount {
+      font-size: 26px;
+      color: var(--success);
+      font-weight: 700;
+      animation: blink 1.2s infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    /* IMAGES */
+    .grant-images {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .grant-images img {
+      height: 60px;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+
+    img.cheque {
+      display: block;
+      margin: 16px auto;
+      width: 240px;
+      max-width: 90%;
+      border: 1px solid #eee;
+      border-radius: 8px;
+    }
+
+    .fees {
+      text-align: left;
+      margin-top: 12px;
+    }
+
+    .fees p {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      font-size: 15px;
+    }
+
+    .paid { color: var(--success); font-weight: 700; }
+    .pending { color: var(--danger); font-weight: 700; }
+
+    .btn {
+      background: var(--ups-brown);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 10px;
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      background: #4a2416;
+      transform: translateY(-1px);
+    }
+
+    .processing {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 5px solid #eee;
+      border-top-color: var(--ups-brown);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer {
+      margin-top: auto;
+      text-align: center;
+      padding: 16px;
+      font-size: 13px;
+      background: #f4f4f4;
+      border-top: 1px solid #ddd;
+      color: #555;
+    }
+
+    @media (max-width: 880px) {
+      .container { flex-direction: column; padding: 18px; }
+      .right { width: 100%; }
+      header h1 { font-size: 20px; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-logos">
+      <!-- UPS and Grant logos side by side -->
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0ciAKLUwBtvPL2ner6jw7zaeXiq4OiSofEg&s" alt="UPS Logo">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS0PnTx1m5kMU4Fa4swtSc_IzftBOdrnLokQg&s" alt="SBA Logo">
+      <img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" alt="Grant Icon">
+    </div>
+    <h1>Grant Disbursement & UPS Cheque Shipment</h1>
+    <p>Secure Grant Cheque Delivery and Shipment Tracking Portal</p>
+  </header>
+
+  <div class="container">
+    <!-- LEFT SECTION -->
+    <section class="left">
+      <h2>Applicant Summary</h2>
+      <p class="lead">Welcome back, <strong>Gabriel K Kalama</strong>.</p>
+
+      <div class="summary">
+        <ul class="info-list">
+          <li><strong>Full Legal Name:</strong> Gabriel K Kalama</li>
+          <li><strong>Date of Birth:</strong> 1977-02-08</li>
+          <li><strong>Email:</strong> gnhmerchandise@hotmail.com</li>
+          <li><strong>Phone:</strong> (808) 583-5174</li>
+          <li><strong>Address:</strong> 85121 Alawalua St Unit B, Waianae, HI 96792</li>
+          <li><strong>EIN:</strong> 863393319</li>
+          <li><strong>Organization:</strong> GNH Financial Services LLC</li>
+          <li style="padding-top:10px"><span class="approved-amount">$50,000 Approved</span></li>
+        </ul>
+      </div>
+
+
+    </section>
+
+    <!-- RIGHT SECTION -->
+    <aside class="right">
+      <h2>UPS Shipment Details</h2>
+      <img class="cheque" src="cheque.png" alt="Cheque Image">
+
+      <p class="lead">Your grant cheque is ready for UPS shipment.</p>
+
+      <div class="fees">
+        <p>Activation Fee: <span class="paid">$750 ✅ Paid</span></p>
+        <p>Withdrawal Fee: <span class="paid">$1,150 ✅ Paid</span></p>
+        <p id="shippingFeeRow">UPS Shipment Fee: <span class="pending">$120 ❌ Pending</span></p>
+      </div>
+
+      <p>To dispatch your cheque securely via <strong>UPS Express</strong>, please complete the one-time shipping fee. Delivery within <strong>24 hours</strong> after confirmation.</p>
+
+      <button class="btn" id="mockPayBtn">💳 Pay UPS Shipment ($120)</button>
+
+      <div id="statusBox" style="margin-top:10px;"></div>
+      <div class="processing" id="processing">
+        <div class="spinner"></div>
+        <div id="processingText">Processing UPS shipment...</div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>© 2025 United Parcel Service of America, Inc. & U.S. Small Business Administration | All Rights Reserved</footer>
+
+  <script>
+    const mockPayBtn = document.getElementById('mockPayBtn');
+    const statusBox = document.getElementById('statusBox');
+    const processing = document.getElementById('processing');
+    const processingText = document.getElementById('processingText');
+    const shippingFeeRow = document.getElementById('shippingFeeRow');
+
+    mockPayBtn.addEventListener('click', () => {
+      statusBox.innerHTML = '';
+      processing.style.display = 'flex';
+      processingText.innerText = 'Confirming UPS shipment payment...';
+
+      setTimeout(() => {
+        processing.style.display = 'none';
+        statusBox.innerHTML = '<p style="color:green;font-weight:700">✅ $120 UPS Shipment Fee Recorded. Your cheque will be dispatched within 24 hours once payment is confirmed.</p>';
+        shippingFeeRow.innerHTML = 'UPS Shipment Fee: <span class="pending">$120 ❌ Pending</span>';
+      }, 1200);
+    });
+  </script>
+</body>
+</html>
